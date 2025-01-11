@@ -1,0 +1,18 @@
+{
+  "name": "lgs-timer",
+  "module": "index.ts",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "client:dev": "cd packages/client && bun run dev",
+    "server:dev": "cd packages/server && bun run dev"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

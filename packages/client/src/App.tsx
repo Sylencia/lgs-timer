@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 import useWebSocket from 'react-use-websocket';
 import type { SubscribeMessage, CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
@@ -18,6 +18,21 @@ const generateRoomId = (length: number = 4): string => {
 
 function App() {
   const [timers, setTimers] = useState<Array<TimerData>>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimers((prevTimers) =>
+        prevTimers.map((timer) => {
+          if (timer.running) {
+            return { ...timer, timeRemaining: timer.endTime - Date.now() };
+          }
+          return timer;
+        })
+      );
+    }, 300);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const { sendJsonMessage } = useWebSocket(WS_URL, {
     share: true,
@@ -43,6 +58,28 @@ function App() {
     },
   });
 
+  // Timer Handlers
+
+  const handleAddTimer = () => {
+    sendJsonMessage({
+      type: 'createTimer',
+      room: 'abcd',
+      timer: {
+        id: generateRoomId(),
+        endTime: Date.now() + 10 * 60 * 1000,
+        timeRemaining: 10 * 60 * 1000,
+        running: false,
+        eventName: 'Test Event',
+        rounds: 3,
+        roundTime: 10 * 60 * 1000,
+        hasDraft: false,
+        draftTime: 0,
+        currentRoundNumber: 1,
+        currentRoundLength: 10 * 60 * 1000,
+      },
+    } as CreateTimerMessage);
+  };
+
   const handleRoomUpdate = (timers: Array<TimerData>) => {
     setTimers(timers);
   };
@@ -65,37 +102,101 @@ function App() {
     } as DeleteTimerMessage);
   };
 
+  const handleToggleTimer = (id: string) => {
+    const timer = timers.find((timer) => timer.id === id);
+
+    if (timer) {
+      const newTimer = {
+        ...timer,
+        running: !timer.running,
+      };
+
+      if (newTimer.running) {
+        const newEndTime = Date.now() + timer.timeRemaining;
+        newTimer.endTime = newEndTime;
+      } else {
+        const newTimeRemaining = timer.endTime - Date.now();
+        newTimer.timeRemaining = newTimeRemaining;
+      }
+
+      setTimers(timers.map((t) => (t.id === id ? newTimer : t)));
+
+      handleUpdateTimer(newTimer);
+    }
+  };
+
+  const handleAdjustTime = (id: string, amount: number) => {
+    const timer = timers.find((timer) => timer.id === id);
+
+    if (timer) {
+      const newTimeRemaining = timer.timeRemaining + amount;
+      const newEndTime = Date.now() + newTimeRemaining;
+      const newTimer = { ...timer, timeRemaining: newTimeRemaining, endTime: newEndTime };
+
+      setTimers(timers.map((t) => (t.id === id ? newTimer : t)));
+
+      handleUpdateTimer(newTimer);
+    }
+  };
+
+  const handleAdjustRounds = (id: string, amount: number) => {
+    const timer = timers.find((timer) => timer.id === id);
+
+    if (timer) {
+      const newTimer = { ...timer, rounds: Math.max(0, timer.rounds + amount) };
+
+      setTimers(timers.map((t) => (t.id === id ? newTimer : t)));
+
+      handleUpdateTimer(newTimer);
+    }
+  };
+
+  const handleChangeRounds = (id: string, direction: 'next' | 'previous') => {
+    const timer = timers.find((timer) => timer.id === id);
+
+    if (timer) {
+      const newRoundNumber =
+        direction === 'next'
+          ? Math.min(timer.rounds, timer.currentRoundNumber + 1)
+          : Math.max(1, timer.currentRoundNumber - 1);
+      const newTimer = { ...timer, currentRoundNumber: newRoundNumber, timeRemaining: timer.roundTime, running: false };
+
+      setTimers(timers.map((t) => (t.id === id ? newTimer : t)));
+
+      handleUpdateTimer(newTimer);
+    }
+  };
+
+  // TODO: Debounce this as it can change fast
+  const handleUpdateEventName = (id: string, eventName: string) => {
+    const timer = timers.find((timer) => timer.id === id);
+
+    if (timer) {
+      const newTimer = { ...timer, eventName };
+
+      setTimers(timers.map((t) => (t.id === id ? newTimer : t)));
+
+      handleUpdateTimer(newTimer);
+    }
+  };
+
   return (
     <>
       <div className="card">
         <button onClick={() => sendJsonMessage({ type: 'subscribe', room: 'abcd' } as SubscribeMessage)}>
           send msg
         </button>
-        <button
-          onClick={() =>
-            sendJsonMessage({
-              type: 'createTimer',
-              room: 'abcd',
-              timer: {
-                id: generateRoomId(),
-                endTime: Date.now() + 10 * 60 * 1000,
-                timeRemaining: 10 * 60 * 1000,
-                running: false,
-                eventName: 'Test Event',
-                rounds: 3,
-                roundTime: 10 * 60 * 1000,
-                hasDraft: false,
-                draftTime: 0,
-                currentRoundNumber: 1,
-                currentRoundLength: 10 * 60 * 1000,
-              },
-            } as CreateTimerMessage)
-          }
-        >
-          create timer
-        </button>
+        <button onClick={handleAddTimer}>create timer</button>
       </div>
-      <TimerGrid timers={timers} onRemoveTimer={handleRemoveTimer} onUpdateTimer={handleUpdateTimer} />
+      <TimerGrid
+        timers={timers}
+        onRemoveTimer={handleRemoveTimer}
+        onToggleTimer={handleToggleTimer}
+        onAdjustTime={handleAdjustTime}
+        onAdjustRounds={handleAdjustRounds}
+        onChangeRound={handleChangeRounds}
+        onUpdateEventName={handleUpdateEventName}
+      />
     </>
   );
 }

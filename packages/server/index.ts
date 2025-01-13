@@ -85,6 +85,10 @@ const handleSubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => {
 const handleUnsubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => {
   ws.unsubscribe(room);
   rooms.get(room)!.clients.delete(ws);
+
+  if (rooms.get(room)!.clients.size === 0) {
+    rooms.delete(room);
+  }
 };
 
 const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timer: TimerData) => {
@@ -102,7 +106,6 @@ const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, tim
 };
 
 const handleUpdateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timer: TimerData) => {
-  console.log(timer);
   const roomData = rooms.get(room);
   if (roomData && roomData.clients.has(ws)) {
     const existingTimer = roomData.timers.find((t) => t.id === timer.id);

@@ -15,8 +15,3 @@ export const formatTime = (milliseconds: number): string => {
 
   return formattedString;
 };
-
-export const currentTimeToNearestSecond = (): number => {
-  const now = new Date();
-  return now.setMilliseconds(0);
-};

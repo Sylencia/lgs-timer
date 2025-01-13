@@ -5,10 +5,22 @@ import { Timer } from '../Timer';
 interface TimerGridProps {
   timers: Array<TimerData>;
   onRemoveTimer: (id: string) => void;
-  onUpdateTimer: (timer: TimerData) => void;
+  onToggleTimer: (id: string) => void;
+  onAdjustTime: (id: string, amount: number) => void;
+  onAdjustRounds: (id: string, amount: number) => void;
+  onChangeRound: (id: string, direction: 'next' | 'previous') => void;
+  onUpdateEventName: (id: string, eventName: string) => void;
 }
 
-export const TimerGrid = ({ timers, onRemoveTimer, onUpdateTimer }: TimerGridProps) => {
+export const TimerGrid = ({
+  timers,
+  onRemoveTimer,
+  onToggleTimer,
+  onAdjustRounds,
+  onAdjustTime,
+  onChangeRound,
+  onUpdateEventName,
+}: TimerGridProps) => {
   const [columns, setColumns] = useState(1);
 
   useEffect(() => {
@@ -27,7 +39,16 @@ export const TimerGrid = ({ timers, onRemoveTimer, onUpdateTimer }: TimerGridPro
   return (
     <div className={`grid gap-4 p-4 ${columns === 2 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
       {timers.map((timer) => (
-        <Timer key={timer.id} timerData={timer} onRemoveTimer={onRemoveTimer} onUpdateTimer={onUpdateTimer} />
+        <Timer
+          key={timer.id}
+          timerData={timer}
+          onRemoveTimer={onRemoveTimer}
+          onToggleTimer={onToggleTimer}
+          onAdjustTime={onAdjustTime}
+          onAdjustRounds={onAdjustRounds}
+          onChangeRound={onChangeRound}
+          onUpdateEventName={onUpdateEventName}
+        />
       ))}
     </div>
   );

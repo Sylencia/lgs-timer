@@ -1,9 +1,8 @@
-'use client';
-
 import { useState, useEffect, useCallback } from 'react';
-// import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { formatTime } from '../../utils/formatTime';
+import { Popover } from 'react-tiny-popover';
 import type { TimerData } from '@lgs-timer/types';
+import { formatTime } from '../../utils/formatTime';
+import './Timer.css';
 
 interface ExtraTimerProps {
   onRemoveTimer: (id: string) => void;
@@ -11,8 +10,9 @@ interface ExtraTimerProps {
 
 type TimerProps = TimerData & ExtraTimerProps;
 
-export default function Timer({ onRemoveTimer, ...props }: TimerProps) {
+export const Timer = ({ onRemoveTimer, ...props }: TimerProps) => {
   const [timer, setTimer] = useState<TimerData>(props);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -79,31 +79,31 @@ export default function Timer({ onRemoveTimer, ...props }: TimerProps) {
 
       <div className="p-4 flex justify-between items-center">
         <button onClick={toggleTimer}>{timer.running ? 'Pause' : 'Start'}</button>
-
-        {/* <Popover>
-          <PopoverTrigger asChild>
-            <button>Controls</button>
-          </PopoverTrigger>
-          <PopoverContent className="w-80">
-            <div className="space-y-2">
-              <div className="grid grid-cols-4 gap-1">
+        <Popover
+          isOpen={isPopoverOpen}
+          positions={['bottom', 'right', 'left', 'top']}
+          padding={10}
+          onClickOutside={() => setIsPopoverOpen(false)}
+          content={() => (
+            <div className="timer-controls">
+              <div className="timer-controls-grid-4">
                 <button onClick={() => adjustTime(-60)}>-1m</button>
                 <button onClick={() => adjustTime(-10)}>-10s</button>
                 <button onClick={() => adjustTime(10)}>+10s</button>
                 <button onClick={() => adjustTime(60)}>+1m</button>
               </div>
 
-              <div className="grid grid-cols-2 gap-1">
+              <div className="timer-controls-grid-2">
                 <button onClick={() => adjustRounds(-1)}>-1 Round</button>
                 <button onClick={() => adjustRounds(1)}>+1 Round</button>
               </div>
 
-              <div className="grid grid-cols-2 gap-1">
+              <div className="timer-controls-grid-2">
                 <button onClick={() => changeRound('previous')}>Prev Round</button>
                 <button onClick={() => changeRound('next')}>Next Round</button>
               </div>
 
-              <button onClick={endEvent} className="w-full">
+              <button onClick={endEvent} className="timer-controls-end-event">
                 End Event
               </button>
 
@@ -119,9 +119,13 @@ export default function Timer({ onRemoveTimer, ...props }: TimerProps) {
                 />
               </div>
             </div>
-          </PopoverContent>
-        </Popover> */}
+          )}
+        >
+          <button onClick={() => setIsPopoverOpen(!isPopoverOpen)} className="timer-button">
+            Controls
+          </button>
+        </Popover>
       </div>
     </div>
   );
-}
+};

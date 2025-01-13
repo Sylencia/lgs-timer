@@ -1,0 +1,25 @@
+.timer-controls {
+  background-color: #6c7086;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+
+.timer-controls > * + * {
+  margin-top: 0.5rem;
+}
+
+.timer-controls-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.timer-controls-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+}
+
+.timer-controls-end-event {
+  width: 100%;
+}

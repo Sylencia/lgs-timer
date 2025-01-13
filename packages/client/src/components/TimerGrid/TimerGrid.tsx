@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { TimerData } from '@lgs-timer/types';
+import { Timer } from '../Timer';
 
 interface TimerGridProps {
   timers: Array<TimerData>;
@@ -25,14 +26,7 @@ export const TimerGrid = ({ timers, onRemoveTimer }: TimerGridProps) => {
   return (
     <div className={`grid gap-4 p-4 ${columns === 2 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
       {timers.map((timer) => (
-        // <Timer key={timer.id} {...timer} onRemoveTimer={onRemoveTimer} />
-        <div key={timer.id} className="bg-white shadow-md rounded-lg p-4">
-          <h2 className="text-xl font-bold">{timer.eventName}</h2>
-          <p className="text-lg">
-            {timer.currentRoundNumber}/{timer.rounds} - {timer.currentRoundLength / 1000} seconds
-          </p>
-          <button onClick={() => onRemoveTimer(timer.id)}>Remove</button>
-        </div>
+        <Timer key={timer.id} {...timer} onRemoveTimer={onRemoveTimer} />
       ))}
     </div>
   );

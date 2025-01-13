@@ -1,13 +1,23 @@
 import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
 import './App.css';
 import useWebSocket from 'react-use-websocket';
-import type { SubscribeMessage, CreateTimerMessage } from '../../../types/messageTypes';
+import type { SubscribeMessage, CreateTimerMessage, TimerData } from '@lgs-timer/types';
+import { TimerGrid } from './components/TimerGrid';
 
 const WS_URL = 'ws://localhost:3000';
 
+const generateRoomId = (length: number = 4): string => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let roomId = '';
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    roomId += characters[randomIndex];
+  }
+  return roomId;
+};
+
 function App() {
+  const [timers, setTimers] = useState<Array<TimerData>>([]);
   const [count, setCount] = useState(0);
 
   const { sendJsonMessage } = useWebSocket(WS_URL, {
@@ -16,21 +26,34 @@ function App() {
       console.log('Opened connection');
     },
     onMessage: (message) => {
-      console.log('Received message', message);
+      const messageData: string = message.data;
+
+      try {
+        const data = JSON.parse(messageData);
+
+        switch (data.type) {
+          case 'roomUpdate':
+            handleRoomUpdate(data.timers);
+            break;
+          default:
+            console.warn('Unknown message type', data);
+        }
+      } catch (e) {
+        console.error('Error parsing message', e);
+      }
     },
   });
 
+  const handleRoomUpdate = (timers: Array<TimerData>) => {
+    setTimers(timers);
+  };
+
+  const handleRemoveTimer = (id: string) => {
+    setTimers(timers.filter((timer) => timer.id !== id));
+  };
+
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
       <div className="card">
         <button onClick={() => sendJsonMessage({ type: 'subscribe', room: 'abcd' } as SubscribeMessage)}>
           send msg
@@ -41,7 +64,7 @@ function App() {
               type: 'createTimer',
               room: 'abcd',
               timer: {
-                id: '1',
+                id: generateRoomId(),
                 endTime: Date.now() + 10 * 60 * 1000,
                 timeRemaining: 10 * 60 * 1000,
                 running: false,
@@ -63,7 +86,7 @@ function App() {
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
       </div>
-      <p className="read-the-docs">Click on the Vite and React logos to learn more</p>
+      <TimerGrid timers={timers} onRemoveTimer={handleRemoveTimer} />
     </>
   );
 }

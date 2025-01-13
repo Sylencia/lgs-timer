@@ -75,27 +75,19 @@ const handleSubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => {
   }
   ws.subscribe(room);
   rooms.get(room)!.clients.add(ws);
-  server.publish(
-    room,
+
+  // Send the current state of the room to the client
+  ws.send(
     JSON.stringify({
-      messageType: 'roomUpdate',
-      clients: rooms.get(room)!.clients.size,
+      type: 'roomUpdate',
+      timers: rooms.get(room)!.timers,
     })
   );
-  ws.send(JSON.stringify(rooms.get(room)!.timers));
 };
 
 const handleUnsubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => {
   ws.unsubscribe(room);
   rooms.get(room)!.clients.delete(ws);
-
-  server.publish(
-    room,
-    JSON.stringify({
-      messageType: 'roomUpdate',
-      clients: rooms.get(room)!.clients.size,
-    })
-  );
 };
 
 const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timer: TimerData) => {
@@ -103,7 +95,13 @@ const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, tim
   const roomData = rooms.get(room);
   if (roomData && roomData.clients.has(ws)) {
     roomData.timers.push(timer);
-    server.publish(room, JSON.stringify(roomData.timers));
+    server.publish(
+      room,
+      JSON.stringify({
+        type: 'roomUpdate',
+        timers: rooms.get(room)!.timers,
+      })
+    );
   }
   // Create a timer in the room
 };

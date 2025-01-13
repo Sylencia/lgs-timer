@@ -5,9 +5,10 @@ import { Timer } from '../Timer';
 interface TimerGridProps {
   timers: Array<TimerData>;
   onRemoveTimer: (id: string) => void;
+  onUpdateTimer: (timer: TimerData) => void;
 }
 
-export const TimerGrid = ({ timers, onRemoveTimer }: TimerGridProps) => {
+export const TimerGrid = ({ timers, onRemoveTimer, onUpdateTimer }: TimerGridProps) => {
   const [columns, setColumns] = useState(1);
 
   useEffect(() => {
@@ -26,7 +27,7 @@ export const TimerGrid = ({ timers, onRemoveTimer }: TimerGridProps) => {
   return (
     <div className={`grid gap-4 p-4 ${columns === 2 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
       {timers.map((timer) => (
-        <Timer key={timer.id} {...timer} onRemoveTimer={onRemoveTimer} />
+        <Timer key={timer.id} timerData={timer} onRemoveTimer={onRemoveTimer} onUpdateTimer={onUpdateTimer} />
       ))}
     </div>
   );

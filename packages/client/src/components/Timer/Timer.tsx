@@ -1,49 +1,77 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Popover } from 'react-tiny-popover';
 import type { TimerData } from '@lgs-timer/types';
-import { formatTime } from '../../utils/formatTime';
+import { currentTimeToNearestSecond, formatTime } from '../../utils/formatTime';
 import './Timer.css';
 
 interface ExtraTimerProps {
+  timerData: TimerData;
   onRemoveTimer: (id: string) => void;
+  onUpdateTimer: (timer: TimerData) => void;
 }
 
-type TimerProps = TimerData & ExtraTimerProps;
+type TimerProps = ExtraTimerProps;
 
-export const Timer = ({ onRemoveTimer, ...props }: TimerProps) => {
-  const [timer, setTimer] = useState<TimerData>(props);
+export const Timer = ({ onRemoveTimer, onUpdateTimer, timerData }: TimerProps) => {
+  const [timer, setTimer] = useState<TimerData>(timerData);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
+    console.log(timerData, formatTime(timerData.endTime - currentTimeToNearestSecond()));
+    setTimer(timerData);
+    setTimeRemaining(timerData.running ? timerData.endTime - currentTimeToNearestSecond() : timerData.timeRemaining);
+    setIsRunning(timerData.running);
+  }, [timerData]);
+
+  useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (timer.running && timer.timeRemaining > 0) {
+    if (isRunning) {
       interval = setInterval(() => {
-        setTimer((prevTimer) => ({
-          ...prevTimer,
-          timeRemaining: prevTimer.timeRemaining - 1,
-        }));
+        console.log('tick', formatTime(timer.endTime - currentTimeToNearestSecond()));
+        setTimeRemaining(timer.endTime - currentTimeToNearestSecond());
       }, 1000);
+    } else {
+      clearInterval(interval);
     }
     return () => clearInterval(interval);
-  }, [timer.running, timer.timeRemaining]);
+  }, [isRunning, timer]);
 
-  const toggleTimer = useCallback(() => {
-    setTimer((prevTimer) => ({ ...prevTimer, running: !prevTimer.running }));
-  }, []);
+  const startTimer = useCallback(() => {
+    console.log(currentTimeToNearestSecond() + timer.timeRemaining);
+    const newTimer = { ...timer, running: true, endTime: currentTimeToNearestSecond() + timer.timeRemaining };
+    setIsRunning(true);
+    setTimer(newTimer);
+    onUpdateTimer(newTimer);
+  }, [onUpdateTimer, timer]);
 
-  const adjustTime = useCallback((amount: number) => {
-    setTimer((prevTimer) => ({
-      ...prevTimer,
-      timeRemaining: Math.max(0, prevTimer.timeRemaining + amount),
-    }));
-  }, []);
+  const pauseTimer = useCallback(() => {
+    const newTimer = { ...timer, running: false, timeRemaining };
+    setIsRunning(false);
+    setTimer(newTimer);
+    onUpdateTimer(newTimer);
+  }, [onUpdateTimer, timer, timeRemaining]);
 
-  const adjustRounds = useCallback((amount: number) => {
-    setTimer((prevTimer) => ({
-      ...prevTimer,
-      rounds: Math.max(1, prevTimer.rounds + amount),
-    }));
-  }, []);
+  const adjustTime = useCallback(
+    (amount: number) => {
+      const newTimeRemaining = timeRemaining + amount;
+      const newEndTime = currentTimeToNearestSecond() + newTimeRemaining;
+      const newTimer = { ...timer, timeRemaining: newTimeRemaining, endTime: newEndTime };
+      setTimer(newTimer);
+      onUpdateTimer(newTimer);
+    },
+    [onUpdateTimer, timer, timeRemaining]
+  );
+
+  const adjustRounds = useCallback(
+    (amount: number) => {
+      const newTimer = { ...timer, rounds: Math.max(1, timer.rounds + amount) };
+      setTimer(newTimer);
+      onUpdateTimer(newTimer);
+    },
+    [onUpdateTimer, timer]
+  );
 
   const changeRound = useCallback((direction: 'next' | 'previous') => {
     setTimer((prevTimer) => {
@@ -73,12 +101,12 @@ export const Timer = ({ onRemoveTimer, ...props }: TimerProps) => {
           </p>
         </div>
         <div className="flex-shrink-0">
-          <p className="text-5xl font-mono">{formatTime(timer.timeRemaining)}</p>
+          <p className="text-5xl font-mono">{formatTime(timeRemaining)}</p>
         </div>
       </div>
 
       <div className="p-4 flex justify-between items-center">
-        <button onClick={toggleTimer}>{timer.running ? 'Pause' : 'Start'}</button>
+        <button onClick={isRunning ? pauseTimer : startTimer}>{isRunning ? 'Pause' : 'Start'}</button>
         <Popover
           isOpen={isPopoverOpen}
           positions={['bottom', 'right', 'left', 'top']}

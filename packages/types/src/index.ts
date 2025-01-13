@@ -14,6 +14,25 @@ export interface CreateTimerMessage {
   timer: TimerData;
 }
 
+export interface DeleteTimerMessage {
+  type: 'deleteTimer';
+  room: string;
+  id: string;
+}
+
+export interface UpdateTimerMessage {
+  type: 'updateTimer';
+  room: string;
+  timer: TimerData;
+}
+
+export type ClientMessage =
+  | SubscribeMessage
+  | UnsubscribeMessage
+  | CreateTimerMessage
+  | DeleteTimerMessage
+  | UpdateTimerMessage;
+
 export type TimerData = {
   id: string;
   endTime: number;

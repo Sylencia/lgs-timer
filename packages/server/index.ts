@@ -1,5 +1,5 @@
 import type { ServerWebSocket } from 'bun';
-import type { TimerData } from '../../types/messageTypes';
+import type { ClientMessage, TimerData } from '@lgs-timer/types';
 
 type WebSocketData = {
   channelId: string;
@@ -26,7 +26,7 @@ const server = Bun.serve<WebSocketData>({
   },
   websocket: {
     open(ws) {
-      console.log('Opened connection', ws);
+      console.log('Opened connection');
     },
     close(ws) {
       removeClientFromAllRooms(ws);
@@ -35,7 +35,7 @@ const server = Bun.serve<WebSocketData>({
     // this is called when a message is received
     async message(ws, message) {
       try {
-        const data = JSON.parse(message as string);
+        const data: ClientMessage = JSON.parse(message as string);
 
         switch (data.type) {
           case 'subscribe':
@@ -47,17 +47,14 @@ const server = Bun.serve<WebSocketData>({
           case 'createTimer':
             handleCreateTimer(ws, data.room, data.timer);
             break;
-          case 'startTimer':
-            handleStartTimer(ws, data.room, data.timerId);
-            break;
-          case 'pauseTimer':
-            handlePauseTimer(ws, data.room, data.timerId);
+          case 'updateTimer':
+            handleUpdateTimer(ws, data.room, data.timer);
             break;
           case 'deleteTimer':
-            handleDeleteTimer(ws, data.room, data.timerId);
+            handleDeleteTimer(ws, data.room, data.id);
             break;
           default:
-            console.warn('Unknown message type', data.type);
+            console.warn('Unknown message type', data);
         }
       } catch (e) {
         console.error('Invalid message format: ', message, e);
@@ -91,7 +88,6 @@ const handleUnsubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => 
 };
 
 const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timer: TimerData) => {
-  console.log('Creating timer', timer);
   const roomData = rooms.get(room);
   if (roomData && roomData.clients.has(ws)) {
     roomData.timers.push(timer);
@@ -103,19 +99,42 @@ const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, tim
       })
     );
   }
-  // Create a timer in the room
 };
 
-const handleStartTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timerId: number) => {
-  // Start a specific timer in the room
+const handleUpdateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timer: TimerData) => {
+  console.log(timer);
+  const roomData = rooms.get(room);
+  if (roomData && roomData.clients.has(ws)) {
+    const existingTimer = roomData.timers.find((t) => t.id === timer.id);
+    if (existingTimer) {
+      Object.assign(existingTimer, timer);
+      server.publish(
+        room,
+        JSON.stringify({
+          type: 'roomUpdate',
+          timers: rooms.get(room)!.timers,
+        })
+      );
+    }
+  }
 };
 
-const handlePauseTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timerId: number) => {
-  // Pause a specific timer in the room
-};
+const handleDeleteTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timerId: string) => {
+  const roomData = rooms.get(room);
+  if (roomData && roomData.clients.has(ws)) {
+    const idx = roomData.timers.findIndex((timer) => timer.id === timerId);
+    if (idx !== -1) {
+      roomData.timers.splice(idx, 1);
 
-const handleDeleteTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timerId: number) => {
-  // Delete a specific timer in the room
+      server.publish(
+        room,
+        JSON.stringify({
+          type: 'roomUpdate',
+          timers: rooms.get(room)!.timers,
+        })
+      );
+    }
+  }
 };
 
 const removeClientFromAllRooms = (ws: ServerWebSocket<WebSocketData>) => {

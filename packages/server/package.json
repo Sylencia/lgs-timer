@@ -6,7 +6,8 @@
     "dev": "bun --hot index.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@lgs-timer/types": "workspace:*"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"

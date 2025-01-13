@@ -1,7 +1,22 @@
-export function formatTime(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
+export const formatTime = (milliseconds: number): string => {
+  const sign = milliseconds < 0 ? '-' : '';
+  const seconds = Math.round(milliseconds / 1000);
+  const absSeconds = Math.abs(seconds);
+  const hours = Math.floor(absSeconds / 3600);
+  const minutes = Math.floor((absSeconds % 3600) / 60);
+  const remainingSeconds = absSeconds % 60;
 
-  return [hours, minutes, remainingSeconds].map((v) => v.toString().padStart(2, '0')).join(':');
-}
+  let formattedString = sign;
+  if (hours > 0) {
+    formattedString += `${hours}:`;
+  }
+  formattedString += `${String(minutes).padStart(2, '0')}:`;
+  formattedString += String(remainingSeconds).padStart(2, '0');
+
+  return formattedString;
+};
+
+export const currentTimeToNearestSecond = (): number => {
+  const now = new Date();
+  return now.setMilliseconds(0);
+};

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './App.css';
 import useWebSocket from 'react-use-websocket';
-import type { SubscribeMessage, CreateTimerMessage, TimerData } from '@lgs-timer/types';
+import type { SubscribeMessage, CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
 import { TimerGrid } from './components/TimerGrid';
 
 const WS_URL = 'ws://localhost:3000';
@@ -18,7 +18,6 @@ const generateRoomId = (length: number = 4): string => {
 
 function App() {
   const [timers, setTimers] = useState<Array<TimerData>>([]);
-  const [count, setCount] = useState(0);
 
   const { sendJsonMessage } = useWebSocket(WS_URL, {
     share: true,
@@ -48,8 +47,22 @@ function App() {
     setTimers(timers);
   };
 
+  const handleUpdateTimer = (timer: TimerData) => {
+    sendJsonMessage({
+      type: 'updateTimer',
+      room: 'abcd',
+      timer,
+    });
+  };
+
   const handleRemoveTimer = (id: string) => {
     setTimers(timers.filter((timer) => timer.id !== id));
+
+    sendJsonMessage({
+      type: 'deleteTimer',
+      room: 'abcd',
+      id,
+    } as DeleteTimerMessage);
   };
 
   return (
@@ -81,12 +94,8 @@ function App() {
         >
           create timer
         </button>
-        <button onClick={() => setCount((count) => count + 1)}>count is {count}</button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
       </div>
-      <TimerGrid timers={timers} onRemoveTimer={handleRemoveTimer} />
+      <TimerGrid timers={timers} onRemoveTimer={handleRemoveTimer} onUpdateTimer={handleUpdateTimer} />
     </>
   );
 }

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
 import type { TimerData } from '@lgs-timer/types';
 import { Timer } from '@components/Timer';
+import './TimerGrid.css';
 
 interface TimerGridProps {
   timers: Array<TimerData>;
@@ -21,23 +21,8 @@ export const TimerGrid = ({
   onChangeRound,
   onUpdateEventName,
 }: TimerGridProps) => {
-  const [columns, setColumns] = useState(1);
-
-  useEffect(() => {
-    const checkHeight = () => {
-      const windowHeight = window.innerHeight;
-      const timerHeight = 12.5 * 16; // Approximate height of a timer in pixels
-      const totalTimerHeight = timers.length * timerHeight + (timers.length - 1) * 16;
-      setColumns(totalTimerHeight > windowHeight ? 2 : 1);
-    };
-
-    checkHeight();
-    window.addEventListener('resize', checkHeight);
-    return () => window.removeEventListener('resize', checkHeight);
-  }, [timers.length]);
-
   return (
-    <div className={`grid gap-4 p-4 ${columns === 2 ? 'md:grid-cols-2' : 'grid-cols-1'}`}>
+    <div className="timer-grid">
       {timers.map((timer) => (
         <Timer
           key={timer.id}

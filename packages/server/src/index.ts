@@ -1,5 +1,12 @@
 import type { ServerWebSocket } from 'bun';
-import type { ClientMessage, TimerData } from '@lgs-timer/types';
+import { randomUUIDv7 } from 'bun';
+import {
+  RoomAccess,
+  type ClientMessage,
+  type EditRoomInfoMessage,
+  type RoomInfoMessage,
+  type TimerData,
+} from '@lgs-timer/types';
 import { generateRandomId } from '@lgs-timer/utils';
 
 type WebSocketData = {
@@ -7,11 +14,15 @@ type WebSocketData = {
 };
 
 interface RoomData {
+  editAccessId: string;
+  viewOnlyAccessId: string;
   timers: TimerData[];
   clients: Set<ServerWebSocket<WebSocketData>>;
 }
 
-const rooms = new Map<string, RoomData>();
+const roomsMap = new Map<string, RoomData>();
+// accessID => roomCode
+const accessIDMap = new Map<string, string>();
 
 const server = Bun.serve<WebSocketData>({
   fetch(req, server) {
@@ -43,19 +54,19 @@ const server = Bun.serve<WebSocketData>({
             handleCreateRoom(ws);
             break;
           case 'subscribe':
-            handleSubscribe(ws, data.room);
+            handleSubscribe(ws, data.accessId);
             break;
           case 'unsubscribe':
-            handleUnsubscribe(ws, data.room);
+            handleUnsubscribe(ws, data.accessId);
             break;
           case 'createTimer':
-            handleCreateTimer(ws, data.room, data.timer);
+            handleCreateTimer(ws, data.accessId, data.timer);
             break;
           case 'updateTimer':
-            handleUpdateTimer(ws, data.room, data.timer);
+            handleUpdateTimer(ws, data.accessId, data.timer);
             break;
           case 'deleteTimer':
-            handleDeleteTimer(ws, data.room, data.id);
+            handleDeleteTimer(ws, data.accessId, data.id);
             break;
           default:
             console.warn('Unknown message type', data);
@@ -67,111 +78,183 @@ const server = Bun.serve<WebSocketData>({
   },
 });
 
-const handleCreateRoom = (ws: ServerWebSocket<WebSocketData>) => {
-  let hasGeneratedNewRoom = false;
-
-  while (!hasGeneratedNewRoom) {
-    const room = generateRandomId();
-
-    if (!rooms.has(room)) {
-      hasGeneratedNewRoom = true;
-      rooms.set(room, {
-        timers: [],
-        clients: new Set(),
-      });
-      handleSubscribe(ws, room);
-    }
+const getRoomFromAccessId = (
+  ws: ServerWebSocket<WebSocketData>,
+  accessId: string,
+  requiresEditAccess: boolean = false,
+): { roomId: string; room: RoomData } | null => {
+  const roomId = accessIDMap.get(accessId);
+  console.log(accessIDMap.keys(), accessId);
+  if (!roomId) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Invalid access ID' }));
+    return null;
   }
+
+  const room = roomsMap.get(roomId);
+  if (!room) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Room not found' }));
+    return null;
+  }
+
+  if (requiresEditAccess && room.editAccessId !== accessId) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Insufficient access level' }));
+    return null;
+  }
+
+  return { roomId, room };
 };
 
-const handleSubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => {
-  if (!rooms.has(room)) {
-    rooms.set(room, {
-      timers: [],
-      clients: new Set(),
-    });
-  }
-  ws.subscribe(room);
-  rooms.get(room)!.clients.add(ws);
+const handleCreateRoom = (ws: ServerWebSocket<WebSocketData>) => {
+  const roomId = randomUUIDv7();
+  let editAccessId = generateRandomId();
+  let viewOnlyAccessId = generateRandomId();
 
-  ws.send(
-    JSON.stringify({
-      type: 'roomInfo',
-      mode: 'edit',
-      roomCode: room,
-    }),
-  );
+  while (accessIDMap.has(editAccessId)) {
+    editAccessId = generateRandomId();
+  }
+
+  accessIDMap.set(editAccessId, roomId);
+
+  while (accessIDMap.has(viewOnlyAccessId)) {
+    viewOnlyAccessId = generateRandomId();
+  }
+
+  accessIDMap.set(viewOnlyAccessId, roomId);
+
+  roomsMap.set(roomId, {
+    viewOnlyAccessId,
+    editAccessId,
+    timers: [],
+    clients: new Set(),
+  });
+  handleSubscribe(ws, editAccessId);
+};
+
+const handleSubscribe = (ws: ServerWebSocket<WebSocketData>, accessId: string) => {
+  const context = getRoomFromAccessId(ws, accessId);
+  if (!context) {
+    return;
+  }
+
+  const { roomId, room } = context;
+
+  const accessLevel = room.editAccessId === accessId ? RoomAccess.EDIT : RoomAccess.VIEW_ONLY;
+  room.clients.add(ws);
+
+  ws.subscribe(roomId);
+
+  const roomInfo: RoomInfoMessage = {
+    type: 'roomInfo',
+    accessLevel,
+    viewAccessId: room.viewOnlyAccessId,
+  };
+
+  if (accessLevel === RoomAccess.EDIT) {
+    (roomInfo as EditRoomInfoMessage).editAccessId = room.editAccessId;
+  }
+
+  ws.send(JSON.stringify(roomInfo));
 
   // Send the current state of the room to the client
   ws.send(
     JSON.stringify({
       type: 'roomUpdate',
-      timers: rooms.get(room)!.timers,
+      timers: roomsMap.get(roomId)!.timers,
     }),
   );
 };
 
-const handleUnsubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => {
-  ws.unsubscribe(room);
-  rooms.get(room)!.clients.delete(ws);
+const handleUnsubscribe = (ws: ServerWebSocket<WebSocketData>, accessId: string) => {
+  const context = getRoomFromAccessId(ws, accessId);
+  if (!context) {
+    return;
+  }
 
-  if (rooms.get(room)!.clients.size === 0) {
-    rooms.delete(room);
+  const { roomId, room } = context;
+
+  ws.unsubscribe(roomId);
+  room.clients.delete(ws);
+
+  if (room.clients.size === 0) {
+    roomsMap.delete(roomId);
   }
 };
 
-const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timer: TimerData) => {
-  const roomData = rooms.get(room);
-  if (roomData && roomData.clients.has(ws)) {
-    roomData.timers.push(timer);
-    server.publish(
-      room,
-      JSON.stringify({
-        type: 'roomUpdate',
-        timers: rooms.get(room)!.timers,
-      }),
-    );
+const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, accessId: string, timer: TimerData) => {
+  const context = getRoomFromAccessId(ws, accessId, true);
+  if (!context) {
+    return;
   }
+
+  const { roomId, room } = context;
+
+  room.timers.push(timer);
+  server.publish(
+    roomId,
+    JSON.stringify({
+      type: 'roomUpdate',
+      timers: room.timers,
+    }),
+  );
 };
 
-const handleUpdateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timer: TimerData) => {
-  const roomData = rooms.get(room);
-  if (roomData && roomData.clients.has(ws)) {
-    const existingTimer = roomData.timers.find((t) => t.id === timer.id);
-    if (existingTimer) {
-      Object.assign(existingTimer, timer);
-      server.publish(
-        room,
-        JSON.stringify({
-          type: 'roomUpdate',
-          timers: rooms.get(room)!.timers,
-        }),
-      );
-    }
+const handleUpdateTimer = (ws: ServerWebSocket<WebSocketData>, accessId: string, timer: TimerData) => {
+  const context = getRoomFromAccessId(ws, accessId, true);
+  if (!context) {
+    return;
   }
+
+  const { roomId, room } = context;
+
+  const existingTimer = room.timers.find((t) => t.id === timer.id);
+  if (!existingTimer) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Timer not found' }));
+    return;
+  }
+
+  Object.assign(existingTimer, timer);
+  server.publish(
+    roomId,
+    JSON.stringify({
+      type: 'roomUpdate',
+      timers: room.timers,
+    }),
+  );
 };
 
-const handleDeleteTimer = (ws: ServerWebSocket<WebSocketData>, room: string, timerId: string) => {
-  const roomData = rooms.get(room);
-  if (roomData && roomData.clients.has(ws)) {
-    const idx = roomData.timers.findIndex((timer) => timer.id === timerId);
-    if (idx !== -1) {
-      roomData.timers.splice(idx, 1);
-
-      server.publish(
-        room,
-        JSON.stringify({
-          type: 'roomUpdate',
-          timers: rooms.get(room)!.timers,
-        }),
-      );
-    }
+const handleDeleteTimer = (ws: ServerWebSocket<WebSocketData>, accessId: string, timerId: string) => {
+  const context = getRoomFromAccessId(ws, accessId, true);
+  if (!context) {
+    return;
   }
+
+  const { roomId, room } = context;
+  const idx = room.timers.findIndex((timer) => timer.id === timerId);
+  if (idx !== -1) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Timer not found' }));
+    return;
+  }
+
+  room.timers.splice(idx, 1);
+  server.publish(
+    roomId,
+    JSON.stringify({
+      type: 'roomUpdate',
+      timers: room.timers,
+    }),
+  );
 };
 
 const removeClientFromAllRooms = (ws: ServerWebSocket<WebSocketData>) => {
-  for (const room of rooms.keys()) {
-    handleUnsubscribe(ws, room);
+  for (const [roomId, room] of roomsMap.entries()) {
+    if (ws.isSubscribed(roomId)) {
+      ws.unsubscribe(roomId);
+      room.clients.delete(ws);
+
+      if (room.clients.size === 0) {
+        roomsMap.delete(roomId);
+      }
+    }
   }
 };
 

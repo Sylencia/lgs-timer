@@ -1,32 +1,34 @@
+export * from './RoomTypes';
+export * from './ServerMessageTypes';
 export interface CreateRoomMessage {
   type: 'createRoom';
 }
 
 export interface SubscribeMessage {
   type: 'subscribe';
-  room: string;
+  accessId: string;
 }
 
 export interface UnsubscribeMessage {
   type: 'unsubscribe';
-  room: string;
+  accessId: string;
 }
 
 export interface CreateTimerMessage {
   type: 'createTimer';
-  room: string;
+  accessId: string;
   timer: TimerData;
 }
 
 export interface DeleteTimerMessage {
   type: 'deleteTimer';
-  room: string;
+  accessId: string;
   id: string;
 }
 
 export interface UpdateTimerMessage {
   type: 'updateTimer';
-  room: string;
+  accessId: string;
   timer: TimerData;
 }
 

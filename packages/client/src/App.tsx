@@ -1,18 +1,18 @@
 import { useEffect, useState } from 'react';
 import './App.css';
 import useWebSocket from 'react-use-websocket';
-import type { SubscribeMessage, CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
+import type { CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
 import { generateRandomId } from '@lgs-timer/utils';
 import { TimerGrid } from '@components/TimerGrid';
 import { Header } from '@components/Header';
-import { RoomMode, useRoomStore } from '@stores/useRoomStore';
 import { Welcome } from '@components/Welcome';
+import { useRoomStore } from '@stores/useRoomStore';
 
 const WS_URL = 'ws://localhost:3000';
 
 function App() {
   const [timers, setTimers] = useState<Array<TimerData>>([]);
-  const setRoomInfo = useRoomStore((state) => state.setRoomInfo);
+  const getRoomCode = useRoomStore((state) => state.getRoomCode);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,11 +41,10 @@ function App() {
         const data = JSON.parse(messageData);
 
         switch (data.type) {
+          case 'roomInfo':
+            break;
           case 'roomUpdate':
             handleRoomUpdate(data.timers);
-            break;
-          case 'roomInfo':
-            handleRoomInfo(data.roomCode, data.mode);
             break;
           default:
             console.warn('Unknown message type', data);
@@ -61,7 +60,7 @@ function App() {
   const handleAddTimer = () => {
     sendJsonMessage({
       type: 'createTimer',
-      room: 'abcd',
+      accessId: getRoomCode(),
       timer: {
         id: generateRandomId(),
         endTime: Date.now() + 10 * 60 * 1000,
@@ -82,14 +81,10 @@ function App() {
     setTimers(timers);
   };
 
-  const handleRoomInfo = (roomCode: string, mode: RoomMode) => {
-    setRoomInfo(roomCode, mode);
-  };
-
   const handleUpdateTimer = (timer: TimerData) => {
     sendJsonMessage({
       type: 'updateTimer',
-      room: 'abcd',
+      accessId: getRoomCode(),
       timer,
     });
   };
@@ -99,7 +94,7 @@ function App() {
 
     sendJsonMessage({
       type: 'deleteTimer',
-      room: 'abcd',
+      accessId: getRoomCode(),
       id,
     } as DeleteTimerMessage);
   };
@@ -187,9 +182,6 @@ function App() {
       <Header />
       <Welcome />
       <div className="card">
-        <button onClick={() => sendJsonMessage({ type: 'subscribe', room: 'abcd' } as SubscribeMessage)}>
-          send msg
-        </button>
         <button onClick={handleAddTimer}>create timer</button>
       </div>
       <TimerGrid

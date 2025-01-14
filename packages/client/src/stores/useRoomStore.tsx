@@ -1,15 +1,21 @@
 import { create } from 'zustand';
-
-export type RoomMode = 'view' | 'edit' | 'none';
+import { RoomAccess, RoomMode } from '@lgs-timer/types';
 
 interface RoomState {
-  room: string;
+  editRoomId: string;
+  viewOnlyRoomId: string;
   mode: RoomMode;
-  setRoomInfo: (room: string, mode: RoomMode) => void;
+  updateEditRoomInfo: (editRoomId: string, viewOnlyRoomId: string, mode: RoomMode) => void;
+  updateViewOnlyRoomInfo: (viewOnlyRoomId: string, mode: RoomMode) => void;
+  getRoomCode: () => string;
 }
 
-export const useRoomStore = create<RoomState>((set) => ({
-  room: '',
-  mode: 'none',
-  setRoomInfo: (room: string, mode: RoomMode) => set({ room, mode }),
+export const useRoomStore = create<RoomState>((set, get) => ({
+  editRoomId: '',
+  viewOnlyRoomId: '',
+  mode: RoomAccess.NONE,
+  updateEditRoomInfo: (editRoomId: string, viewOnlyRoomId: string, mode: RoomMode) =>
+    set({ editRoomId, viewOnlyRoomId, mode }),
+  updateViewOnlyRoomInfo: (viewOnlyRoomId: string, mode: RoomMode) => set({ editRoomId: '', viewOnlyRoomId, mode }),
+  getRoomCode: () => (get().editRoomId ? get().editRoomId : get().viewOnlyRoomId),
 }));

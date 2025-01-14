@@ -3,13 +3,16 @@ import { useShallow } from 'zustand/shallow';
 import clsx from 'clsx';
 import { useRoomStore } from '@stores/useRoomStore';
 import './Header.css';
+import { RoomAccess } from '@lgs-timer/types';
 
 export const Header = () => {
   const { readyState } = useWebSocket('ws://localhost:3000', {
     share: true,
   });
 
-  const { room, mode } = useRoomStore(useShallow((state) => ({ room: state.room, mode: state.mode })));
+  const { editRoomId, viewOnlyRoomId, mode } = useRoomStore(
+    useShallow((state) => ({ editRoomId: state.editRoomId, viewOnlyRoomId: state.viewOnlyRoomId, mode: state.mode })),
+  );
 
   const readyStateText = {
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
@@ -23,10 +26,10 @@ export const Header = () => {
     <header className="header">
       <div className="header-container container mx-auto px-4 py-4 flex justify-between items-center">
         <h1 className="header-title">LGS Timer</h1>
-        {mode !== 'none' && (
+        {mode !== RoomAccess.NONE && (
           <div className="header-room-info">
-            <p className="header-room-code">Room: {room}</p>
-            <p className="header-room-mode">Mode: {mode}</p>
+            <p className="header-room-code">View Only Room ID: {viewOnlyRoomId}</p>
+            {mode === RoomAccess.EDIT && <p className="header-room-mode">Edit Room ID: {editRoomId}</p>}
           </div>
         )}
         <div className="header-connection-status">

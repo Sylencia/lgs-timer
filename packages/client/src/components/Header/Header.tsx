@@ -25,7 +25,7 @@ export const Header = () => {
   return (
     <header className="header">
       <div className="header-container container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="header-title">LGS Timer</h1>
+        <h1 className="header-title">Time Raveler</h1>
         {mode !== RoomAccess.NONE && (
           <div className="header-room-info">
             <p className="header-room-code">View Only Room ID: {viewOnlyRoomId}</p>

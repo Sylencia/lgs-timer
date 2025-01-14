@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Popover } from 'react-tiny-popover';
 import type { TimerData } from '@lgs-timer/types';
-import { formatTime } from '../../utils/formatTime';
+import { formatTime } from '@utils/formatTime';
 import './Timer.css';
 
 interface TimerProps {

@@ -1,0 +1,51 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 4rem;
+  display: flex;
+
+  .header-container {
+    padding: 0.25rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .header-title {
+    font-size: 1.5rem;
+  }
+
+  .header-room-info {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .header-connection-status {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+
+    .header-status-icon {
+      height: 1rem;
+      width: 1rem;
+      border-radius: 100%;
+
+      &.header-status-connecting {
+        background-color: #f5a97f;
+      }
+
+      &.header-status-open {
+        background-color: #a6da95;
+      }
+
+      &.header-status-closed {
+        background-color: #ed8796;
+      }
+    }
+  }
+}

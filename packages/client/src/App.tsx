@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import useWebSocket from 'react-use-websocket';
 import type { SubscribeMessage, CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
-import { TimerGrid } from './components/TimerGrid';
+import { TimerGrid } from '@components/TimerGrid';
+import { Header } from '@components/Header';
+import { RoomMode, useRoomStore } from '@stores/useRoomStore';
 
 const WS_URL = 'ws://localhost:3000';
 
@@ -18,6 +20,7 @@ const generateRoomId = (length: number = 4): string => {
 
 function App() {
   const [timers, setTimers] = useState<Array<TimerData>>([]);
+  const setRoomInfo = useRoomStore((state) => state.setRoomInfo);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -27,7 +30,7 @@ function App() {
             return { ...timer, timeRemaining: timer.endTime - Date.now() };
           }
           return timer;
-        })
+        }),
       );
     }, 300);
 
@@ -48,6 +51,9 @@ function App() {
         switch (data.type) {
           case 'roomUpdate':
             handleRoomUpdate(data.timers);
+            break;
+          case 'roomInfo':
+            handleRoomInfo(data.roomCode, data.mode);
             break;
           default:
             console.warn('Unknown message type', data);
@@ -82,6 +88,10 @@ function App() {
 
   const handleRoomUpdate = (timers: Array<TimerData>) => {
     setTimers(timers);
+  };
+
+  const handleRoomInfo = (roomCode: string, mode: RoomMode) => {
+    setRoomInfo(roomCode, mode);
   };
 
   const handleUpdateTimer = (timer: TimerData) => {
@@ -182,6 +192,7 @@ function App() {
 
   return (
     <>
+      <Header />
       <div className="card">
         <button onClick={() => sendJsonMessage({ type: 'subscribe', room: 'abcd' } as SubscribeMessage)}>
           send msg

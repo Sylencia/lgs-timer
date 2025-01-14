@@ -73,12 +73,20 @@ const handleSubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => {
   ws.subscribe(room);
   rooms.get(room)!.clients.add(ws);
 
+  ws.send(
+    JSON.stringify({
+      type: 'roomInfo',
+      mode: 'edit',
+      roomCode: room,
+    }),
+  );
+
   // Send the current state of the room to the client
   ws.send(
     JSON.stringify({
       type: 'roomUpdate',
       timers: rooms.get(room)!.timers,
-    })
+    }),
   );
 };
 
@@ -100,7 +108,7 @@ const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, tim
       JSON.stringify({
         type: 'roomUpdate',
         timers: rooms.get(room)!.timers,
-      })
+      }),
     );
   }
 };
@@ -116,7 +124,7 @@ const handleUpdateTimer = (ws: ServerWebSocket<WebSocketData>, room: string, tim
         JSON.stringify({
           type: 'roomUpdate',
           timers: rooms.get(room)!.timers,
-        })
+        }),
       );
     }
   }
@@ -134,7 +142,7 @@ const handleDeleteTimer = (ws: ServerWebSocket<WebSocketData>, room: string, tim
         JSON.stringify({
           type: 'roomUpdate',
           timers: rooms.get(room)!.timers,
-        })
+        }),
       );
     }
   }

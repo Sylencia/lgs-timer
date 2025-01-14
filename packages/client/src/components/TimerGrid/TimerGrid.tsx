@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { TimerData } from '@lgs-timer/types';
-import { Timer } from '../Timer';
+import { Timer } from '@components/Timer';
 
 interface TimerGridProps {
   timers: Array<TimerData>;

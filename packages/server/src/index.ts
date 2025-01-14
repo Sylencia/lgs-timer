@@ -229,8 +229,9 @@ const handleDeleteTimer = (ws: ServerWebSocket<WebSocketData>, accessId: string,
   }
 
   const { roomId, room } = context;
+
   const idx = room.timers.findIndex((timer) => timer.id === timerId);
-  if (idx !== -1) {
+  if (idx === -1) {
     ws.send(JSON.stringify({ type: 'error', message: 'Timer not found' }));
     return;
   }

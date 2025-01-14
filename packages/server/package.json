@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "bun --hot index.ts"
   },
+  "dependencies": {
+    "@lgs-timer/utils": "workspace:*"
+  },
   "devDependencies": {
     "@types/bun": "latest",
     "@lgs-timer/types": "workspace:*"

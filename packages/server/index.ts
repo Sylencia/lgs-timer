@@ -1,5 +1,6 @@
 import type { ServerWebSocket } from 'bun';
 import type { ClientMessage, TimerData } from '@lgs-timer/types';
+import { generateRandomId } from '@lgs-timer/utils';
 
 type WebSocketData = {
   channelId: string;
@@ -38,6 +39,9 @@ const server = Bun.serve<WebSocketData>({
         const data: ClientMessage = JSON.parse(message as string);
 
         switch (data.type) {
+          case 'createRoom':
+            handleCreateRoom(ws);
+            break;
           case 'subscribe':
             handleSubscribe(ws, data.room);
             break;
@@ -62,6 +66,23 @@ const server = Bun.serve<WebSocketData>({
     },
   },
 });
+
+const handleCreateRoom = (ws: ServerWebSocket<WebSocketData>) => {
+  let hasGeneratedNewRoom = false;
+
+  while (!hasGeneratedNewRoom) {
+    const room = generateRandomId();
+
+    if (!rooms.has(room)) {
+      hasGeneratedNewRoom = true;
+      rooms.set(room, {
+        timers: [],
+        clients: new Set(),
+      });
+      handleSubscribe(ws, room);
+    }
+  }
+};
 
 const handleSubscribe = (ws: ServerWebSocket<WebSocketData>, room: string) => {
   if (!rooms.has(room)) {

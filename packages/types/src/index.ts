@@ -1,3 +1,7 @@
+export interface CreateRoomMessage {
+  type: 'createRoom';
+}
+
 export interface SubscribeMessage {
   type: 'subscribe';
   room: string;
@@ -27,6 +31,7 @@ export interface UpdateTimerMessage {
 }
 
 export type ClientMessage =
+  | CreateRoomMessage
   | SubscribeMessage
   | UnsubscribeMessage
   | CreateTimerMessage

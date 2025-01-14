@@ -2,21 +2,13 @@ import { useEffect, useState } from 'react';
 import './App.css';
 import useWebSocket from 'react-use-websocket';
 import type { SubscribeMessage, CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
+import { generateRandomId } from '@lgs-timer/utils';
 import { TimerGrid } from '@components/TimerGrid';
 import { Header } from '@components/Header';
 import { RoomMode, useRoomStore } from '@stores/useRoomStore';
+import { Welcome } from '@components/Welcome';
 
 const WS_URL = 'ws://localhost:3000';
-
-const generateRoomId = (length: number = 4): string => {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let roomId = '';
-  for (let i = 0; i < length; i++) {
-    const randomIndex = Math.floor(Math.random() * characters.length);
-    roomId += characters[randomIndex];
-  }
-  return roomId;
-};
 
 function App() {
   const [timers, setTimers] = useState<Array<TimerData>>([]);
@@ -71,7 +63,7 @@ function App() {
       type: 'createTimer',
       room: 'abcd',
       timer: {
-        id: generateRoomId(),
+        id: generateRandomId(),
         endTime: Date.now() + 10 * 60 * 1000,
         timeRemaining: 10 * 60 * 1000,
         running: false,
@@ -193,6 +185,7 @@ function App() {
   return (
     <>
       <Header />
+      <Welcome />
       <div className="card">
         <button onClick={() => sendJsonMessage({ type: 'subscribe', room: 'abcd' } as SubscribeMessage)}>
           send msg

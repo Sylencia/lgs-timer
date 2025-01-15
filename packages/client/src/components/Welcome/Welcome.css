@@ -6,9 +6,10 @@
   flex: 1 1 auto;
   height: 100%;
   gap: 3rem;
+  padding: 0 0.125rem;
 
   .welcome-heading {
-    font-size: 3rem;
+    font-size: 1.5rem;
     text-align: center;
 
     background-image: var(--text-gradient);
@@ -18,7 +19,7 @@
 
   .welcome-room-select {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     gap: 2rem;
     align-items: center;
   }
@@ -54,6 +55,16 @@
 
     &:hover {
       background-position: top right;
+    }
+  }
+
+  @media all and (min-width: 500px) {
+    .welcome-heading {
+      font-size: 3rem;
+    }
+
+    .welcome-room-select {
+      flex-direction: row;
     }
   }
 }

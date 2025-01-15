@@ -6,6 +6,10 @@ export interface ViewOnlyRoomInfoMessage {
   viewAccessId: string;
 }
 
+export interface UnsubscribeSuccess {
+  type: 'unsubscribeSuccess';
+}
+
 export interface EditRoomInfoMessage extends ViewOnlyRoomInfoMessage {
   editAccessId: string;
 }

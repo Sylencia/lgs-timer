@@ -1,5 +1,3 @@
-import type { ServerWebSocket } from 'bun';
-import { randomUUIDv7 } from 'bun';
 import {
   RoomAccess,
   type ClientMessage,
@@ -8,6 +6,8 @@ import {
   type TimerData,
 } from '@lgs-timer/types';
 import { generateRandomId } from '@lgs-timer/utils';
+import type { ServerWebSocket } from 'bun';
+import { randomUUIDv7 } from 'bun';
 
 type WebSocketData = {
   channelId: string;
@@ -83,7 +83,7 @@ const getRoomFromAccessId = (
   accessId: string,
   requiresEditAccess: boolean = false,
 ): { roomId: string; room: RoomData } | null => {
-  const roomId = accessIDMap.get(accessId.toUpperCase());
+  const roomId = accessIDMap.get(accessId);
 
   if (!roomId) {
     ws.send(JSON.stringify({ type: 'error', message: 'Invalid access ID' }));
@@ -141,6 +141,8 @@ const handleSubscribe = (ws: ServerWebSocket<WebSocketData>, accessId: string) =
   const accessLevel = room.editAccessId === accessId ? RoomAccess.EDIT : RoomAccess.VIEW_ONLY;
   room.clients.add(ws);
 
+  console.log(accessId, accessLevel, room.viewOnlyAccessId, room.editAccessId);
+
   ws.subscribe(roomId);
 
   const roomInfo: RoomInfoMessage = {
@@ -174,6 +176,8 @@ const handleUnsubscribe = (ws: ServerWebSocket<WebSocketData>, accessId: string)
 
   ws.unsubscribe(roomId);
   room.clients.delete(ws);
+
+  ws.send(JSON.stringify({ type: 'unsubscribeSuccess' }));
 
   if (room.clients.size === 0) {
     accessIDMap.delete(room.editAccessId);

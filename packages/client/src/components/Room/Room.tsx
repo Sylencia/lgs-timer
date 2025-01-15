@@ -1,6 +1,6 @@
 import { AddTimer } from '@components/AddTimer';
 import { Timer } from '@components/Timer';
-import type { CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
+import { RoomAccess, type CreateTimerMessage, type DeleteTimerMessage, type TimerData } from '@lgs-timer/types';
 import { convertMinutesToMilliseconds, generateRandomId } from '@lgs-timer/utils';
 import { useRoomStore } from '@stores/useRoomStore';
 import { useEffect, useState } from 'react';
@@ -18,6 +18,7 @@ interface AddTimerInfo {
 export const Room = () => {
   const [timers, setTimers] = useState<Array<TimerData>>([]);
   const getRoomCode = useRoomStore((state) => state.getRoomCode);
+  const mode = useRoomStore((state) => state.mode);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -39,23 +40,14 @@ export const Room = () => {
     shouldReconnect: () => true,
     reconnectAttempts: 10,
     reconnectInterval: 3000,
-    onOpen: () => {
-      console.log('Opened connection');
-    },
     onMessage: (message) => {
       const messageData: string = message.data;
 
       try {
         const data = JSON.parse(messageData);
 
-        switch (data.type) {
-          case 'roomInfo':
-            break;
-          case 'roomUpdate':
-            handleRoomUpdate(data.timers);
-            break;
-          default:
-            console.warn('Unknown message type', data);
+        if (data.type === 'roomUpdate') {
+          handleRoomUpdate(data.timers);
         }
       } catch (e) {
         console.error('Error parsing message', e);
@@ -191,22 +183,26 @@ export const Room = () => {
 
   return (
     <>
-      <div className="timer-grid">
-        {timers.map((timer) => (
-          <Timer
-            key={timer.id}
-            timerData={timer}
-            onRemoveTimer={handleRemoveTimer}
-            onToggleTimer={handleToggleTimer}
-            onAdjustTime={handleAdjustTime}
-            onAdjustRounds={handleAdjustRounds}
-            onChangeRound={handleChangeRounds}
-            onUpdateEventName={handleUpdateEventName}
-          />
-        ))}
-      </div>
+      {timers.length === 0 ? (
+        <div className="no-timers-msg">No timers added yet.</div>
+      ) : (
+        <div className="timer-grid">
+          {timers.map((timer) => (
+            <Timer
+              key={timer.id}
+              timerData={timer}
+              onRemoveTimer={handleRemoveTimer}
+              onToggleTimer={handleToggleTimer}
+              onAdjustTime={handleAdjustTime}
+              onAdjustRounds={handleAdjustRounds}
+              onChangeRound={handleChangeRounds}
+              onUpdateEventName={handleUpdateEventName}
+            />
+          ))}
+        </div>
+      )}
 
-      <AddTimer onAddTimer={handleAddTimer} />
+      {mode === RoomAccess.EDIT && <AddTimer onAddTimer={handleAddTimer} />}
     </>
   );
 };

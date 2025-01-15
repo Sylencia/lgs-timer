@@ -1,31 +1,61 @@
+import { ExpandablePill } from '@components/ExpandablePill';
 import { RoomAccess } from '@lgs-timer/types';
-import { EyeOpenIcon, Pencil1Icon } from '@radix-ui/react-icons';
+import { ExitIcon, EyeOpenIcon, Pencil1Icon } from '@radix-ui/react-icons';
 import { useRoomStore } from '@stores/useRoomStore';
 import clsx from 'clsx';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
-import { useShallow } from 'zustand/shallow';
 import logo from '../../assets/logo.svg';
 import './Header.css';
 
 export const Header = () => {
-  const { readyState } = useWebSocket(import.meta.env.VITE_WS_URL!, {
+  const { readyState, sendJsonMessage } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
     shouldReconnect: () => true,
     reconnectAttempts: 10,
     reconnectInterval: 3000,
+    onMessage: (message) => {
+      const messageData: string = message.data;
+
+      try {
+        const data = JSON.parse(messageData);
+
+        if (data.type === 'unsubscribeSuccess') {
+          resetRoomStore();
+        }
+
+        switch (data.type) {
+          case 'roomInfo':
+            break;
+          case 'roomUpdate':
+            break;
+          case 'unsubscribeSuccess':
+            resetRoomStore();
+            break;
+          default:
+            console.warn('Unknown message type', data);
+        }
+      } catch (e) {
+        console.error('Error parsing message', e);
+      }
+    },
   });
 
-  const { editRoomId, viewOnlyRoomId, mode } = useRoomStore(
-    useShallow((state) => ({ editRoomId: state.editRoomId, viewOnlyRoomId: state.viewOnlyRoomId, mode: state.mode })),
-  );
+  const { editRoomId, viewOnlyRoomId, mode, getRoomCode, resetRoomStore } = useRoomStore();
 
   const readyStateText = {
     [ReadyState.UNINSTANTIATED]: 'Uninstantiated',
-    [ReadyState.CONNECTING]: 'Connecting...',
+    [ReadyState.CONNECTING]: 'Connecting',
     [ReadyState.OPEN]: 'Connected',
-    [ReadyState.CLOSING]: 'Closing...',
+    [ReadyState.CLOSING]: 'Closing',
     [ReadyState.CLOSED]: 'Disconnected',
   }[readyState];
+
+  const handleLeaveRoom = () => {
+    sendJsonMessage({
+      type: 'unsubscribe',
+      accessId: getRoomCode(),
+    });
+  };
 
   return (
     <header className="header">
@@ -35,13 +65,10 @@ export const Header = () => {
           {mode !== RoomAccess.NONE && (
             <div className="header-room-info">
               {mode === RoomAccess.EDIT && (
-                <div className="pill">
-                  <Pencil1Icon /> {editRoomId}
-                </div>
+                <ExpandablePill icon={<Pencil1Icon />} text={editRoomId} className="edit-pill" />
               )}
-              <div className="pill">
-                <EyeOpenIcon /> {viewOnlyRoomId}
-              </div>
+              <ExpandablePill icon={<EyeOpenIcon />} text={viewOnlyRoomId} className="view-pill" />
+              <ExpandablePill icon={<ExitIcon />} text="Leave Room" onClick={handleLeaveRoom} className="leave-pill" />
             </div>
           )}
         </div>

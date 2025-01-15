@@ -16,10 +16,6 @@
 .add-timer-title {
   font-weight: 600;
   font-size: 1.25rem;
-
-  background-image: var(--peach-gradient);
-  background-clip: text;
-  color: transparent;
 }
 
 .add-timer-form {
@@ -30,6 +26,7 @@
   .form-field {
     display: flex;
     flex-direction: column;
+    gap: 0.25rem;
   }
 
   .form-field-horizontal {
@@ -45,7 +42,7 @@
 
   .form-field-label {
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
   }
 
   .add-timer-submit {

@@ -20,14 +20,8 @@ export const Welcome = () => {
       try {
         const data = JSON.parse(messageData);
 
-        switch (data.type) {
-          case 'roomInfo':
-            handleRoomInfo(data);
-            break;
-          case 'roomUpdate':
-            break;
-          default:
-            console.warn('Unknown message type', data);
+        if (data.type === 'roomInfo') {
+          handleRoomInfo(data);
         }
       } catch (e) {
         console.error('Error parsing message', e);
@@ -51,7 +45,7 @@ export const Welcome = () => {
 
   const handleJoinRoom = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    sendJsonMessage({ type: 'subscribe', accessId: roomCodeInput });
+    sendJsonMessage({ type: 'subscribe', accessId: roomCodeInput.toUpperCase() });
     setRoomCodeInput('');
   };
 
@@ -70,17 +64,16 @@ export const Welcome = () => {
             required
             value={roomCodeInput}
             placeholder="Code"
-            pattern="[a-zA-Z]{4}"
+            pattern="[a-zA-Z0-9]{4}"
             size={4}
+            minLength={4}
             maxLength={4}
             title="Room codes are 4 letters long"
             onChange={(event) => {
               setRoomCodeInput(event.target.value);
             }}
           ></input>
-          <button type="submit" disabled={!roomCodeInput}>
-            Join Room
-          </button>
+          <button type="submit">Join Room</button>
         </form>
       </div>
     </div>

@@ -4,14 +4,12 @@ import { FormEvent, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import './Welcome.css';
 
-const WS_URL = 'ws://localhost:3000';
-
 export const Welcome = () => {
   const updateEditRoomInfo = useRoomStore((state) => state.updateEditRoomInfo);
   const updateViewRoomInfo = useRoomStore((state) => state.updateViewOnlyRoomInfo);
   const [roomCodeInput, setRoomCodeInput] = useState<string>('');
 
-  const { sendJsonMessage } = useWebSocket(WS_URL, {
+  const { sendJsonMessage } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
     onMessage: (message) => {
       const messageData: string = message.data;

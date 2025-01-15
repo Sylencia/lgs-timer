@@ -1,13 +1,11 @@
-import { useEffect, useState } from 'react';
+import { AddTimer } from '@components/AddTimer';
 import { Timer } from '@components/Timer';
-import useWebSocket from 'react-use-websocket';
 import type { CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
 import { convertMinutesToMilliseconds, generateRandomId } from '@lgs-timer/utils';
 import { useRoomStore } from '@stores/useRoomStore';
+import { useEffect, useState } from 'react';
+import useWebSocket from 'react-use-websocket';
 import './Room.css';
-import { AddTimer } from '@components/AddTimer';
-
-const WS_URL = 'ws://localhost:3000';
 
 interface AddTimerInfo {
   eventName: string;
@@ -36,7 +34,7 @@ export const Room = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const { sendJsonMessage } = useWebSocket(WS_URL, {
+  const { sendJsonMessage } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
     onOpen: () => {
       console.log('Opened connection');

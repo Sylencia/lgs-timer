@@ -8,7 +8,7 @@ import logo from '../../assets/logo.svg';
 import './Header.css';
 
 export const Header = () => {
-  const { readyState } = useWebSocket('ws://localhost:3000', {
+  const { readyState } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
   });
 

@@ -11,6 +11,9 @@ export const Welcome = () => {
 
   const { sendJsonMessage } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
+    shouldReconnect: () => true,
+    reconnectAttempts: 10,
+    reconnectInterval: 3000,
     onMessage: (message) => {
       const messageData: string = message.data;
 

@@ -10,6 +10,9 @@ import './Header.css';
 export const Header = () => {
   const { readyState } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
+    shouldReconnect: () => true,
+    reconnectAttempts: 10,
+    reconnectInterval: 3000,
   });
 
   const { editRoomId, viewOnlyRoomId, mode } = useRoomStore(

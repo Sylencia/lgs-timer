@@ -36,6 +36,9 @@ export const Room = () => {
 
   const { sendJsonMessage } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
+    shouldReconnect: () => true,
+    reconnectAttempts: 10,
+    reconnectInterval: 3000,
     onOpen: () => {
       console.log('Opened connection');
     },

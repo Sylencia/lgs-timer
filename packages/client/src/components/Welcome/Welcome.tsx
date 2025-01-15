@@ -1,7 +1,8 @@
 import { EditRoomInfoMessage, RoomAccess, ViewOnlyRoomInfoMessage, type RoomInfoMessage } from '@lgs-timer/types';
 import { useRoomStore } from '@stores/useRoomStore';
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
+import './Welcome.css';
 
 const WS_URL = 'ws://localhost:3000';
 
@@ -47,28 +48,35 @@ export const Welcome = () => {
     sendJsonMessage({ type: 'createRoom' });
   };
 
-  const handleJoinRoom = () => {
+  const handleJoinRoom = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     sendJsonMessage({ type: 'subscribe', accessId: roomCodeInput });
+    setRoomCodeInput('');
   };
 
   return (
     <>
       <div>Welcome to LGS Timer</div>
       <button onClick={handleCreateNewRoom}>Create New Room</button>
-      <div>
+      <form onSubmit={handleJoinRoom}>
         <label htmlFor="roomCode">Enter Room Code</label>
         <input
+          className="room-input"
           id="roomCode"
+          type="text"
+          required
           placeholder="Room Code"
           value={roomCodeInput}
+          pattern="[a-zA-Z]{4}"
+          title="Room codes are 4 letters long"
           onChange={(event) => {
             setRoomCodeInput(event.target.value);
           }}
         ></input>
-        <button onClick={handleJoinRoom} disabled={!roomCodeInput}>
+        <button type="submit" disabled={!roomCodeInput}>
           Join Room
         </button>
-      </div>
+      </form>
     </>
   );
 };

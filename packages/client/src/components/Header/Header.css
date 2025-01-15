@@ -6,15 +6,17 @@
   display: flex;
 
   .header-container {
-    padding: 0.25rem 1rem;
+    margin: 0.25rem 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    border-bottom: 1px solid var(--peach);
   }
 
   .header-title {
     font-size: 1.5rem;
+    color: var(--text);
   }
 
   .header-room-info {
@@ -22,6 +24,7 @@
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
+    color: var(--text);
   }
 
   .header-connection-status {

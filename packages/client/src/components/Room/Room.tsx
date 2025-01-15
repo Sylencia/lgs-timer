@@ -2,13 +2,22 @@ import { useEffect, useState } from 'react';
 import { Timer } from '@components/Timer';
 import useWebSocket from 'react-use-websocket';
 import type { CreateTimerMessage, DeleteTimerMessage, TimerData } from '@lgs-timer/types';
-import { generateRandomId } from '@lgs-timer/utils';
+import { convertMinutesToMilliseconds, generateRandomId } from '@lgs-timer/utils';
 import { useRoomStore } from '@stores/useRoomStore';
-import './TimerGrid.css';
+import './Room.css';
+import { AddTimer } from '@components/AddTimer';
 
 const WS_URL = 'ws://localhost:3000';
 
-export const TimerGrid = () => {
+interface AddTimerInfo {
+  eventName: string;
+  rounds: number;
+  roundTime: number;
+  hasDraft: boolean;
+  draftTime: number;
+}
+
+export const Room = () => {
   const [timers, setTimers] = useState<Array<TimerData>>([]);
   const getRoomCode = useRoomStore((state) => state.getRoomCode);
 
@@ -55,22 +64,26 @@ export const TimerGrid = () => {
 
   // Timer Handlers
 
-  const handleAddTimer = () => {
+  const handleAddTimer = ({ eventName, rounds, roundTime, hasDraft, draftTime }: AddTimerInfo) => {
+    const convertedDraftTime = convertMinutesToMilliseconds(draftTime ?? 0);
+    const convertedRoundTime = convertMinutesToMilliseconds(roundTime);
+    const timeRemaining = hasDraft ? convertedDraftTime : convertedRoundTime;
+
     sendJsonMessage({
       type: 'createTimer',
       accessId: getRoomCode(),
       timer: {
         id: generateRandomId(),
-        endTime: Date.now() + 10 * 60 * 1000,
-        timeRemaining: 10 * 60 * 1000,
+        endTime: Date.now() + timeRemaining,
+        timeRemaining,
         running: false,
-        eventName: 'Test Event',
-        rounds: 3,
-        roundTime: 10 * 60 * 1000,
-        hasDraft: false,
-        draftTime: 0,
-        currentRoundNumber: 1,
-        currentRoundLength: 10 * 60 * 1000,
+        eventName,
+        rounds,
+        roundTime: convertedRoundTime,
+        hasDraft,
+        draftTime: convertedDraftTime,
+        currentRoundNumber: hasDraft ? 0 : 1,
+        currentRoundLength: timeRemaining,
       },
     } as CreateTimerMessage);
   };
@@ -177,10 +190,6 @@ export const TimerGrid = () => {
 
   return (
     <>
-      <div className="card">
-        <button onClick={handleAddTimer}>create timer</button>
-      </div>
-
       <div className="timer-grid">
         {timers.map((timer) => (
           <Timer
@@ -195,6 +204,8 @@ export const TimerGrid = () => {
           />
         ))}
       </div>
+
+      <AddTimer onAddTimer={handleAddTimer} />
     </>
   );
 };

@@ -1,7 +1,12 @@
+body {
+  min-height: 100vh;
+  background-color: var(--base);
+}
+
 .app {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
 
   .app-header {
     flex: 0 1 auto;

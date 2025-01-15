@@ -83,8 +83,8 @@ const getRoomFromAccessId = (
   accessId: string,
   requiresEditAccess: boolean = false,
 ): { roomId: string; room: RoomData } | null => {
-  const roomId = accessIDMap.get(accessId);
-  console.log(accessIDMap.keys(), accessId);
+  const roomId = accessIDMap.get(accessId.toUpperCase());
+
   if (!roomId) {
     ws.send(JSON.stringify({ type: 'error', message: 'Invalid access ID' }));
     return null;
@@ -176,6 +176,8 @@ const handleUnsubscribe = (ws: ServerWebSocket<WebSocketData>, accessId: string)
   room.clients.delete(ws);
 
   if (room.clients.size === 0) {
+    accessIDMap.delete(room.editAccessId);
+    accessIDMap.delete(room.viewOnlyAccessId);
     roomsMap.delete(roomId);
   }
 };
@@ -248,13 +250,13 @@ const handleDeleteTimer = (ws: ServerWebSocket<WebSocketData>, accessId: string,
 
 const removeClientFromAllRooms = (ws: ServerWebSocket<WebSocketData>) => {
   for (const [roomId, room] of roomsMap.entries()) {
-    if (ws.isSubscribed(roomId)) {
-      ws.unsubscribe(roomId);
-      room.clients.delete(ws);
+    ws.unsubscribe(roomId);
+    room.clients.delete(ws);
 
-      if (room.clients.size === 0) {
-        roomsMap.delete(roomId);
-      }
+    if (room.clients.size === 0) {
+      accessIDMap.delete(room.editAccessId);
+      accessIDMap.delete(room.viewOnlyAccessId);
+      roomsMap.delete(roomId);
     }
   }
 };

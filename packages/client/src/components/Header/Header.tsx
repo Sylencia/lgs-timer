@@ -39,8 +39,8 @@ export const Header = () => {
               'header-status-open': readyState === ReadyState.OPEN,
               'header-status-closed': readyState === ReadyState.CLOSED || readyState === ReadyState.CLOSING,
             })}
+            title={readyStateText}
           ></div>
-          {readyStateText}
         </div>
       </div>
     </header>

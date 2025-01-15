@@ -1,9 +1,11 @@
+import { RoomAccess } from '@lgs-timer/types';
+import { EyeOpenIcon, Pencil1Icon } from '@radix-ui/react-icons';
+import { useRoomStore } from '@stores/useRoomStore';
+import clsx from 'clsx';
 import useWebSocket, { ReadyState } from 'react-use-websocket';
 import { useShallow } from 'zustand/shallow';
-import clsx from 'clsx';
-import { useRoomStore } from '@stores/useRoomStore';
+import logo from '../../assets/logo.svg';
 import './Header.css';
-import { RoomAccess } from '@lgs-timer/types';
 
 export const Header = () => {
   const { readyState } = useWebSocket('ws://localhost:3000', {
@@ -24,14 +26,22 @@ export const Header = () => {
 
   return (
     <header className="header">
-      <div className="header-container container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="header-title">Time Raveler</h1>
-        {mode !== RoomAccess.NONE && (
-          <div className="header-room-info">
-            <p className="header-room-code">View Only Room ID: {viewOnlyRoomId}</p>
-            {mode === RoomAccess.EDIT && <p className="header-room-mode">Edit Room ID: {editRoomId}</p>}
-          </div>
-        )}
+      <div className="header-container">
+        <div className="header-left">
+          <img src={logo} alt="Logo" />
+          {mode !== RoomAccess.NONE && (
+            <div className="header-room-info">
+              {mode === RoomAccess.EDIT && (
+                <div className="pill">
+                  <Pencil1Icon /> {editRoomId}
+                </div>
+              )}
+              <div className="pill">
+                <EyeOpenIcon /> {viewOnlyRoomId}
+              </div>
+            </div>
+          )}
+        </div>
         <div className="header-connection-status">
           <div
             className={clsx('header-status-icon', {

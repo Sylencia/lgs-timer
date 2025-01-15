@@ -2,7 +2,8 @@
   "name": "lgs-timer",
   "module": "index.ts",
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "prettier-plugin-organize-imports": "^4.1.0"
   },
   "peerDependencies": {
     "typescript": "^5.7.3"

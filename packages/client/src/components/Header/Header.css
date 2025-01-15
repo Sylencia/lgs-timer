@@ -6,7 +6,7 @@
   display: flex;
 
   .header-container {
-    margin: 0.25rem 1rem;
+    margin: 0 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -16,7 +16,12 @@
 
   .header-title {
     font-size: 1.5rem;
-    color: var(--text);
+  }
+
+  .header-left {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
   }
 
   .header-room-info {
@@ -24,7 +29,6 @@
     flex-direction: row;
     align-items: center;
     gap: 0.5rem;
-    color: var(--text);
   }
 
   .header-connection-status {
@@ -39,16 +43,27 @@
       border-radius: 100%;
 
       &.header-status-connecting {
-        background-color: #f5a97f;
+        background-color: var(--peach);
       }
 
       &.header-status-open {
-        background-color: #a6da95;
+        background-color: var(--green);
       }
 
       &.header-status-closed {
-        background-color: #ed8796;
+        background-color: var(--red);
       }
     }
+  }
+
+  .pill {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    background-color: color-mix(in srgb, var(--base), var(--subtext0) 20%);
+    color: var(--subtext0);
   }
 }

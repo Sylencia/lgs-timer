@@ -55,28 +55,33 @@ export const Welcome = () => {
   };
 
   return (
-    <>
-      <div>Welcome to LGS Timer</div>
-      <button onClick={handleCreateNewRoom}>Create New Room</button>
-      <form onSubmit={handleJoinRoom}>
-        <label htmlFor="roomCode">Enter Room Code</label>
-        <input
-          className="room-input"
-          id="roomCode"
-          type="text"
-          required
-          placeholder="Room Code"
-          value={roomCodeInput}
-          pattern="[a-zA-Z]{4}"
-          title="Room codes are 4 letters long"
-          onChange={(event) => {
-            setRoomCodeInput(event.target.value);
-          }}
-        ></input>
-        <button type="submit" disabled={!roomCodeInput}>
-          Join Room
-        </button>
-      </form>
-    </>
+    <div className="welcome">
+      <h1 className="welcome-heading">Create and sync timers for multiple events at your local game store.</h1>
+
+      <div className="welcome-room-select">
+        <button onClick={handleCreateNewRoom}>Create New Room</button>
+        <p>OR</p>
+        <form className="welcome-join-form" onSubmit={handleJoinRoom}>
+          <input
+            className="room-input"
+            id="roomCode"
+            type="text"
+            required
+            value={roomCodeInput}
+            placeholder="Code"
+            pattern="[a-zA-Z]{4}"
+            size={4}
+            maxLength={4}
+            title="Room codes are 4 letters long"
+            onChange={(event) => {
+              setRoomCodeInput(event.target.value);
+            }}
+          ></input>
+          <button type="submit" disabled={!roomCodeInput}>
+            Join Room
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };

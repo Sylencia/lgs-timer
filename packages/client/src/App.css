@@ -1,18 +1,14 @@
 body {
-  min-height: 100vh;
+  min-height: 100svh;
   background-color: var(--base);
+  color: var(--text);
 }
 
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-
-  .app-header {
-    flex: 0 1 auto;
-  }
 
   .app-content {
-    flex: 1 1 auto;
+    height: calc(100svh - 4rem);
   }
 }

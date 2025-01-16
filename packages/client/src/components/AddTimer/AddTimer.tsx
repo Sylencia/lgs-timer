@@ -59,6 +59,7 @@ export const AddTimer = ({ onAddTimer }: AddTimerProps) => {
             </label>
             <input id="eventName" value={eventName} onChange={(e) => setEventName(e.target.value)} required />
           </div>
+          <div className="form-field-divider" />
           <div className="form-field-horizontal">
             <label className="form-field-label" htmlFor="hasDraft">
               Include Draft Round
@@ -81,6 +82,7 @@ export const AddTimer = ({ onAddTimer }: AddTimerProps) => {
               title="A number is required"
             />
           </div>
+          <div className="form-field-divider" />
           <div className="form-field">
             <label className="form-field-label" htmlFor="rounds">
               Number of Rounds
@@ -109,6 +111,7 @@ export const AddTimer = ({ onAddTimer }: AddTimerProps) => {
               title="A number is required"
             />
           </div>
+          <div className="form-field-divider" />
           <button type="submit" className="add-timer-submit">
             Add Timer
           </button>

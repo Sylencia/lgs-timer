@@ -37,7 +37,7 @@
   }
 
   .form-field-divider {
-    border-bottom: 2px solid var(--peach);
+    border-bottom: 1px dashed var(--peach);
   }
 
   .form-field-label {

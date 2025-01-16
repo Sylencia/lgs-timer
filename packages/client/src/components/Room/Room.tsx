@@ -1,9 +1,10 @@
 import { AddTimer } from '@components/AddTimer';
 import { Timer } from '@components/Timer';
+import { useUpdateTick } from '@hooks/useUpdateTick';
 import { RoomAccess, type CreateTimerMessage, type DeleteTimerMessage, type TimerData } from '@lgs-timer/types';
 import { convertMinutesToMilliseconds, generateRandomId } from '@lgs-timer/utils';
 import { useRoomStore } from '@stores/useRoomStore';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import './Room.css';
 
@@ -16,30 +17,17 @@ interface AddTimerInfo {
 }
 
 export const Room = () => {
+  const didUnmount = useRef(false);
   const [timers, setTimers] = useState<Array<TimerData>>([]);
   const getRoomCode = useRoomStore((state) => state.getRoomCode);
   const mode = useRoomStore((state) => state.mode);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTimers((prevTimers) =>
-        prevTimers.map((timer) => {
-          if (timer.running) {
-            return { ...timer, timeRemaining: timer.endTime - Date.now() };
-          }
-          return timer;
-        }),
-      );
-    }, 300);
-
-    return () => clearInterval(interval);
-  }, []);
+  useUpdateTick(1000);
 
   const { sendJsonMessage } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
-    shouldReconnect: () => true,
-    reconnectAttempts: 10,
-    reconnectInterval: 3000,
+    shouldReconnect: () => didUnmount.current === false,
+    reconnectInterval: (attemptNumber) => Math.min(Math.pow(2, attemptNumber) * 1000, 10000),
     onMessage: (message) => {
       const messageData: string = message.data;
 
@@ -54,6 +42,12 @@ export const Room = () => {
       }
     },
   });
+
+  useEffect(() => {
+    return () => {
+      didUnmount.current = true;
+    };
+  }, []);
 
   // Timer Handlers
 
@@ -186,7 +180,7 @@ export const Room = () => {
       {timers.length === 0 ? (
         <div className="no-timers-msg">No timers added yet.</div>
       ) : (
-        <div className="timer-grid">
+        <div className="timer-stack">
           {timers.map((timer) => (
             <Timer
               key={timer.id}

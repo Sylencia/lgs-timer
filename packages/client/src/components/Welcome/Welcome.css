@@ -43,13 +43,9 @@
     background-image: var(--peach-gradient);
     background-size: 150% 100%;
     color: var(--inverted-text);
-
-    &:hover {
-      background-position: top right;
-    }
   }
 
-  @media all and (min-width: 500px) {
+  @media all and (min-width: 31em) {
     .welcome-heading {
       font-size: 3rem;
     }

@@ -12,23 +12,21 @@ interface ExpandablePillProps {
 interface PillActiveStates {
   hover: boolean;
   focus: boolean;
-  clicked: boolean;
 }
 
 export const ExpandablePill = ({ onClick, icon, text, className }: ExpandablePillProps) => {
   const [isFocused, setIsFocused] = useState<PillActiveStates>({
     hover: false,
     focus: false,
-    clicked: false,
   });
 
-  const showContent = useMemo(() => isFocused.hover || isFocused.focus || isFocused.clicked, [isFocused]);
+  const showContent = useMemo(() => isFocused.hover || isFocused.focus, [isFocused]);
 
   const handleOnClick = () => {
     if (onClick) {
       onClick();
     } else {
-      setIsFocused((prev: PillActiveStates) => ({ ...prev, clicked: !prev.clicked }));
+      navigator.clipboard.writeText(text);
     }
   };
 

@@ -115,11 +115,31 @@ button {
   color: var(--text);
   transition: all 0.35 ease-in-out;
   background-color: var(--surface0);
+  background-size: 150% 100%;
+  color: var(--text);
+  white-space: nowrap;
+
   cursor: pointer;
-}
-button:focus,
-button:focus-visible {
-  outline: 2px solid var(--blue);
+
+  &:hover,
+  &:focus {
+    background-color: var(--surface1);
+    background-position: top right;
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: 2px solid var(--blue);
+  }
+
+  &:disabled {
+    color: var(--surface2);
+
+    &:hover,
+    &:focus {
+      background-position: top left;
+    }
+  }
 }
 
 input {
@@ -130,6 +150,7 @@ input {
   font-family: inherit;
   padding: 0.25rem;
   border: 1px solid var(--mauve);
+  border-radius: 0.375rem;
   color: var(--text);
   caret-color: var(--rosewater);
 

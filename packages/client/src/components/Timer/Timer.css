@@ -64,65 +64,62 @@
     align-items: center;
     justify-content: center;
   }
+
+  .start-button {
+    background-color: var(--green);
+    background-image: var(--green-gradient);
+    background-size: 150% 100%;
+    color: var(--inverted-text);
+  }
+
+  .pause-button {
+    background-color: var(--yellow);
+    background-image: var(--yellow-gradient);
+    background-size: 150% 100%;
+    color: var(--inverted-text);
+  }
 }
 
 .timer-controls {
-  background-color: var(--surface1);
+  background-color: var(--crust);
+  border: 1px solid var(--peach);
   padding: 1rem;
   border-radius: 0.5rem;
-}
 
-.timer-controls > * + * {
-  margin-top: 0.5rem;
-}
+  & > * + * {
+    margin-top: 0.5rem;
+  }
 
-.timer-controls-grid-4 {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0.25rem;
-}
+  .timer-controls-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
 
-.timer-controls-grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.25rem;
-}
+  .timer-controls-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.25rem;
+  }
 
-.timer-controls-end-event {
-  width: 100%;
-  background-color: var(--red);
-  background-image: var(--red-gradient);
-  background-size: 150% 100%;
-  color: var(--inverted-text);
-}
+  .timer-controls-end-event {
+    width: 100%;
+    background-color: var(--red);
+    background-image: var(--red-gradient);
+    background-size: 150% 100%;
+    color: var(--inverted-text);
+  }
 
-.timer-controls-name {
-  width: 100%;
-}
+  .timer-controls-name {
+    width: 100%;
 
-.start-button {
-  background-color: var(--green);
-  background-image: var(--green-gradient);
-  background-size: 150% 100%;
-  color: var(--inverted-text);
-
-  &:hover {
-    background-position: top right;
+    &:user-valid {
+      border: 1px solid var(--mauve);
+    }
   }
 }
 
-.pause-button {
-  background-color: var(--yellow);
-  background-image: var(--yellow-gradient);
-  background-size: 150% 100%;
-  color: var(--inverted-text);
-
-  &:hover {
-    background-position: top right;
-  }
-}
-
-@media all and (min-width: 500px) {
+@media all and (min-width: 37em) {
   .timer-container {
     grid-template-rows: max-content auto max-content;
     grid-template-columns: 1fr auto;

@@ -4,13 +4,14 @@
   z-index: 1000;
   height: 4rem;
   display: flex;
+  flex-direction: column;
+  width: 100%;
 
   .header-container {
     margin: 0 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
     border-bottom: 1px solid var(--peach);
   }
 
@@ -38,8 +39,8 @@
     gap: 0.5rem;
 
     .header-status-icon {
-      height: 1rem;
-      width: 1rem;
+      height: 0.5rem;
+      width: 0.5rem;
       border-radius: 100%;
 
       &.header-status-connecting {
@@ -72,6 +73,19 @@
 
     svg {
       color: var(--inverted-text);
+    }
+  }
+
+  .current-time {
+    font-size: 2rem;
+    display: none;
+  }
+}
+
+@media all and (min-width: 37em) {
+  .header {
+    .current-time {
+      display: block;
     }
   }
 }

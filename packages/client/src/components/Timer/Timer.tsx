@@ -2,7 +2,7 @@ import { RoomAccess, type TimerData } from '@lgs-timer/types';
 import { formatTime } from '@lgs-timer/utils';
 import { useRoomStore } from '@stores/useRoomStore';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Popover } from 'react-tiny-popover';
 import './Timer.css';
 
@@ -25,15 +25,38 @@ export const Timer = ({
   onUpdateEventName,
   timerData,
 }: TimerProps) => {
-  const { id, timeRemaining, running, eventName, rounds, currentRoundNumber } = timerData;
+  const { id, endTime, timeRemaining, running, eventName, rounds, currentRoundNumber, hasDraft } = timerData;
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const mode = useRoomStore((state) => state.mode);
+  const [localEventName, setLocalEventName] = useState(eventName);
+  const [localTimeRemaining, setLocalTimeRemaining] = useState(running ? endTime - Date.now() : timeRemaining);
+
+  useEffect(() => {
+    window.addEventListener('timerTick', onTimerTick);
+
+    return () => window.removeEventListener('timerTick', onTimerTick);
+  });
+
+  const onTimerTick = useCallback(() => {
+    if (running) {
+      setLocalTimeRemaining(endTime - Date.now());
+    }
+  }, [timerData]);
+
+  const handleEventNameUpdate = (e: React.FocusEvent<HTMLInputElement, Element>) => {
+    const newName = e.target.value;
+    if (newName === '') {
+      setLocalEventName(eventName);
+    } else {
+      onUpdateEventName(id, newName);
+    }
+  };
 
   return (
     <div className={clsx('timer-container', { 'view-mode': mode === RoomAccess.VIEW_ONLY })}>
       <h2 className="timer-details-name">{eventName}</h2>
       <p className="timer-details-round">
-        Round {currentRoundNumber} of {rounds}
+        {currentRoundNumber === 0 ? 'Draft Time' : `Round ${currentRoundNumber}/${rounds}`}
       </p>
 
       {mode === RoomAccess.EDIT && (
@@ -48,7 +71,9 @@ export const Timer = ({
             {running ? 'Pause' : 'Start'}
           </button>
 
-          <button onClick={() => onChangeRound(id, 'next')}>Next Round</button>
+          <button disabled={currentRoundNumber === rounds} onClick={() => onChangeRound(id, 'next')}>
+            Next Round
+          </button>
 
           <Popover
             isOpen={isPopoverOpen}
@@ -60,8 +85,9 @@ export const Timer = ({
                 <input
                   className="timer-controls-name"
                   id="eventName"
-                  value={eventName}
-                  onChange={(e) => onUpdateEventName(id, e.target.value)}
+                  value={localEventName}
+                  onChange={(e) => setLocalEventName(e.target.value)}
+                  onBlur={handleEventNameUpdate}
                 />
 
                 <div className="timer-controls-grid-4">
@@ -72,13 +98,22 @@ export const Timer = ({
                 </div>
 
                 <div className="timer-controls-grid-2">
-                  <button onClick={() => onAdjustRounds(id, -1)}>-1 Round</button>
+                  <button disabled={rounds <= 1} onClick={() => onAdjustRounds(id, -1)}>
+                    -1 Round
+                  </button>
                   <button onClick={() => onAdjustRounds(id, 1)}>+1 Round</button>
                 </div>
 
                 <div className="timer-controls-grid-2">
-                  <button onClick={() => onChangeRound(id, 'previous')}>Prev Round</button>
-                  <button onClick={() => onChangeRound(id, 'next')}>Next Round</button>
+                  <button
+                    disabled={hasDraft ? currentRoundNumber === 0 : currentRoundNumber <= 1}
+                    onClick={() => onChangeRound(id, 'previous')}
+                  >
+                    Prev Round
+                  </button>
+                  <button disabled={currentRoundNumber === rounds} onClick={() => onChangeRound(id, 'next')}>
+                    Next Round
+                  </button>
                 </div>
 
                 <button onClick={() => onRemoveTimer(id)} className="timer-controls-end-event">
@@ -94,7 +129,7 @@ export const Timer = ({
         </div>
       )}
 
-      <p className="timer-details-time">{formatTime(timeRemaining)}</p>
+      <p className="timer-details-time">{formatTime(localTimeRemaining)}</p>
     </div>
   );
 };

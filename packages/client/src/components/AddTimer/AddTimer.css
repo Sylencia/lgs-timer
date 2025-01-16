@@ -52,10 +52,6 @@
     background-size: 150% 100%;
     font-weight: 600;
     color: var(--inverted-text);
-
-    &:hover {
-      background-position: top right;
-    }
   }
 
   input[type='checkbox'] {

@@ -10,7 +10,7 @@ import type { ServerWebSocket } from 'bun';
 import { randomUUIDv7 } from 'bun';
 
 type WebSocketData = {
-  channelId: string;
+  accessId: string;
 };
 
 interface RoomData {
@@ -26,7 +26,11 @@ const accessIDMap = new Map<string, string>();
 
 const server = Bun.serve<WebSocketData>({
   fetch(req, server) {
-    const success = server.upgrade(req);
+    const success = server.upgrade(req, {
+      data: {
+        accessId: new URL(req.url).searchParams.get('room') ?? '',
+      },
+    });
     if (success) {
       // Bun automatically returns a 101 Switching Protocols
       // if the upgrade succeeds
@@ -38,7 +42,10 @@ const server = Bun.serve<WebSocketData>({
   },
   websocket: {
     open(ws) {
-      console.log('Opened connection');
+      console.log('Opened connection', ws.data.accessId);
+      if (ws.data.accessId) {
+        handleSubscribe(ws, ws.data.accessId);
+      }
     },
     close(ws) {
       removeClientFromAllRooms(ws);
@@ -141,8 +148,6 @@ const handleSubscribe = (ws: ServerWebSocket<WebSocketData>, accessId: string) =
   const accessLevel = room.editAccessId === accessId ? RoomAccess.EDIT : RoomAccess.VIEW_ONLY;
   room.clients.add(ws);
 
-  console.log(accessId, accessLevel, room.viewOnlyAccessId, room.editAccessId);
-
   ws.subscribe(roomId);
 
   const roomInfo: RoomInfoMessage = {
@@ -178,12 +183,6 @@ const handleUnsubscribe = (ws: ServerWebSocket<WebSocketData>, accessId: string)
   room.clients.delete(ws);
 
   ws.send(JSON.stringify({ type: 'unsubscribeSuccess' }));
-
-  if (room.clients.size === 0) {
-    accessIDMap.delete(room.editAccessId);
-    accessIDMap.delete(room.viewOnlyAccessId);
-    roomsMap.delete(roomId);
-  }
 };
 
 const handleCreateTimer = (ws: ServerWebSocket<WebSocketData>, accessId: string, timer: TimerData) => {

@@ -1,19 +1,19 @@
 import { EditRoomInfoMessage, RoomAccess, ViewOnlyRoomInfoMessage, type RoomInfoMessage } from '@lgs-timer/types';
 import { useRoomStore } from '@stores/useRoomStore';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
 import './Welcome.css';
 
 export const Welcome = () => {
+  const didUnmount = useRef(false);
   const updateEditRoomInfo = useRoomStore((state) => state.updateEditRoomInfo);
   const updateViewRoomInfo = useRoomStore((state) => state.updateViewOnlyRoomInfo);
   const [roomCodeInput, setRoomCodeInput] = useState<string>('');
 
   const { sendJsonMessage } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
-    shouldReconnect: () => true,
-    reconnectAttempts: 10,
-    reconnectInterval: 3000,
+    shouldReconnect: () => didUnmount.current === false,
+    reconnectInterval: (attemptNumber) => Math.min(Math.pow(2, attemptNumber) * 1000, 10000),
     onMessage: (message) => {
       const messageData: string = message.data;
 
@@ -28,6 +28,12 @@ export const Welcome = () => {
       }
     },
   });
+
+  useEffect(() => {
+    return () => {
+      didUnmount.current = true;
+    };
+  }, []);
 
   const handleRoomInfo = (data: RoomInfoMessage) => {
     if (data.accessLevel === RoomAccess.EDIT) {

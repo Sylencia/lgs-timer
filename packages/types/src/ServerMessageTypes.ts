@@ -10,6 +10,11 @@ export interface UnsubscribeSuccess {
   type: 'unsubscribeSuccess';
 }
 
+export interface RoomValidityMessage {
+  type: 'roomValidity';
+  valid: boolean;
+}
+
 export interface EditRoomInfoMessage extends ViewOnlyRoomInfoMessage {
   editAccessId: string;
 }

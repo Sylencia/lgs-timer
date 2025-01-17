@@ -32,13 +32,19 @@ export interface UpdateTimerMessage {
   timer: TimerData;
 }
 
+export interface RoomCheckMessage {
+  type: 'roomCheck';
+  accessId: string;
+}
+
 export type ClientMessage =
   | CreateRoomMessage
   | SubscribeMessage
   | UnsubscribeMessage
   | CreateTimerMessage
   | DeleteTimerMessage
-  | UpdateTimerMessage;
+  | UpdateTimerMessage
+  | RoomCheckMessage;
 
 export type TimerData = {
   id: string;

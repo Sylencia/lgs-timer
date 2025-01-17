@@ -3,6 +3,7 @@ import {
   type ClientMessage,
   type EditRoomInfoMessage,
   type RoomInfoMessage,
+  type RoomValidityMessage,
   type TimerData,
 } from '@lgs-timer/types';
 import { generateRandomId } from '@lgs-timer/utils';
@@ -74,6 +75,9 @@ const server = Bun.serve<WebSocketData>({
             break;
           case 'deleteTimer':
             handleDeleteTimer(ws, data.accessId, data.id);
+            break;
+          case 'roomCheck':
+            handleRoomCheck(ws, data.accessId);
             break;
           default:
             console.warn('Unknown message type', data);
@@ -251,16 +255,32 @@ const handleDeleteTimer = (ws: ServerWebSocket<WebSocketData>, accessId: string,
   );
 };
 
+const handleRoomCheck = (ws: ServerWebSocket<WebSocketData>, accessId: string) => {
+  const roomId = accessIDMap.get(accessId);
+  const room = roomsMap.get(roomId ?? '');
+  if (!roomId || !room) {
+    ws.send(
+      JSON.stringify({
+        type: 'roomValidity',
+        valid: false,
+      } as RoomValidityMessage),
+    );
+
+    return;
+  }
+
+  ws.send(
+    JSON.stringify({
+      type: 'roomValidity',
+      valid: true,
+    } as RoomValidityMessage),
+  );
+};
+
 const removeClientFromAllRooms = (ws: ServerWebSocket<WebSocketData>) => {
   for (const [roomId, room] of roomsMap.entries()) {
     ws.unsubscribe(roomId);
     room.clients.delete(ws);
-
-    if (room.clients.size === 0) {
-      accessIDMap.delete(room.editAccessId);
-      accessIDMap.delete(room.viewOnlyAccessId);
-      roomsMap.delete(roomId);
-    }
   }
 };
 

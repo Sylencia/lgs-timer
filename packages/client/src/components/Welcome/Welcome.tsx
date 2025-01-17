@@ -1,19 +1,41 @@
-import { EditRoomInfoMessage, RoomAccess, ViewOnlyRoomInfoMessage, type RoomInfoMessage } from '@lgs-timer/types';
+import {
+  EditRoomInfoMessage,
+  RoomAccess,
+  RoomValidityMessage,
+  ViewOnlyRoomInfoMessage,
+  type RoomInfoMessage,
+} from '@lgs-timer/types';
 import { useRoomStore } from '@stores/useRoomStore';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import useWebSocket from 'react-use-websocket';
+import { useShallow } from 'zustand/shallow';
 import './Welcome.css';
 
 export const Welcome = () => {
   const didUnmount = useRef(false);
-  const updateEditRoomInfo = useRoomStore((state) => state.updateEditRoomInfo);
-  const updateViewRoomInfo = useRoomStore((state) => state.updateViewOnlyRoomInfo);
+  const [updateEditRoomInfo, updateViewRoomInfo, getRoomCode, resetRoomStore] = useRoomStore(
+    useShallow((state) => [
+      state.updateEditRoomInfo,
+      state.updateViewOnlyRoomInfo,
+      state.getRoomCode,
+      state.resetRoomStore,
+    ]),
+  );
   const [roomCodeInput, setRoomCodeInput] = useState<string>('');
 
   const { sendJsonMessage } = useWebSocket(import.meta.env.VITE_WS_URL!, {
     share: true,
     shouldReconnect: () => didUnmount.current === false,
     reconnectInterval: (attemptNumber) => Math.min(Math.pow(2, attemptNumber) * 1000, 10000),
+    onOpen: () => {
+      const roomCode = getRoomCode();
+      if (roomCode) {
+        sendJsonMessage({
+          type: 'roomCheck',
+          accessId: roomCode,
+        });
+      }
+    },
     onMessage: (message) => {
       const messageData: string = message.data;
 
@@ -22,6 +44,10 @@ export const Welcome = () => {
 
         if (data.type === 'roomInfo') {
           handleRoomInfo(data);
+        }
+
+        if (data.type === 'roomValidity') {
+          handleRoomCheck(data);
         }
       } catch (e) {
         console.error('Error parsing message', e);
@@ -42,6 +68,14 @@ export const Welcome = () => {
     } else if (data.accessLevel === RoomAccess.VIEW_ONLY) {
       const { viewAccessId, accessLevel } = data as ViewOnlyRoomInfoMessage;
       updateViewRoomInfo(viewAccessId, accessLevel);
+    }
+  };
+
+  const handleRoomCheck = (data: RoomValidityMessage) => {
+    if (data.valid) {
+      setRoomCodeInput(getRoomCode());
+    } else {
+      resetRoomStore();
     }
   };
 

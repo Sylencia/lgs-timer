@@ -51,6 +51,8 @@ export const Header = () => {
             case 'unsubscribeSuccess':
               resetRoomStore();
               break;
+            case 'roomValidity':
+              break;
             default:
               console.warn('Unknown message type', data);
           }
